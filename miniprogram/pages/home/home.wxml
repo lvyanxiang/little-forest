@@ -1,9 +1,8 @@
-<view class="page">
-  <app-header />
-
-  <view class="hero">
+<view class="page" style="padding-bottom: {{pageBottom}}px;">
+  <view class="hero" style="height: {{heroHeight}}px;">
     <image class="hero-img" src="/assets/hero.jpg" mode="aspectFill" />
     <view class="hero-mask"></view>
+    <app-header overlay="{{true}}" />
     <view class="hero-copy">
       <text class="hero-en">LITTLE FOREST BOOKSTORE</text>
       <view class="hero-title serif">
@@ -23,10 +22,12 @@
   <view class="section">
     <text class="section-title serif">书店特色</text>
     <view class="feature-grid">
-      <view wx:for="{{features}}" wx:key="title" class="feature-card">
-        <text class="feature-icon">{{item.icon}}</text>
-        <text class="feature-title serif">{{item.title}}</text>
-        <text class="feature-desc">{{item.desc}}</text>
+      <view wx:for="{{features}}" wx:key="title" class="feature-cell">
+        <view class="feature-card">
+          <text class="feature-icon">{{item.icon}}</text>
+          <text class="feature-title serif">{{item.title}}</text>
+          <text class="feature-desc">{{item.desc}}</text>
+        </view>
       </view>
     </view>
   </view>
@@ -70,20 +71,25 @@
     <view class="store-cover">
       <image class="store-img" src="/assets/store.jpg" mode="aspectFill" />
       <view class="store-mask"></view>
-      <text class="store-name serif">小森林书店</text>
+      <text class="store-name serif">{{store.name}}</text>
     </view>
     <view class="store-info">
-      <view class="store-row">
+      <view class="store-row link" bindtap="onOpenMap">
         <text class="store-ico">📍</text>
-        <text class="store-text">杭州市西湖区文一西路 108 号</text>
+        <text class="store-text">{{store.address}}</text>
+        <text class="store-nav">导航</text>
       </view>
       <view class="store-row">
         <text class="store-ico">🕘</text>
-        <text class="store-text">每日 09:00 – 19:00（周一闭馆）</text>
+        <text class="store-text">{{store.hours}}</text>
       </view>
-      <view class="store-row" bindtap="onCall">
+      <view class="store-row link" bindtap="onCall">
         <text class="store-ico">📞</text>
-        <text class="store-text">0571-8888-6699</text>
+        <text class="store-text">{{store.phoneDisplay}}</text>
+      </view>
+      <view class="store-tips">
+        <text class="store-tips-title">到店说明：</text>
+        <text class="store-tip">{{homeNoticeText}}</text>
       </view>
     </view>
   </view>

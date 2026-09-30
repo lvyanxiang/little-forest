@@ -1,4 +1,4 @@
-<view class="page {{step === 'pick' ? 'page-pick' : ''}}">
+<view class="page {{step === 'pick' ? 'page-pick' : ''}}" style="padding-bottom: {{pageBottom}}px;">
   <app-header title="到店预约" />
 
   <block wx:if="{{step === 'pick'}}">
@@ -60,16 +60,15 @@
           </view>
           <view class="occ">
             <view class="occ-row">
-              <text class="occ-label" style="color: {{item.muted}};">预约人数</text>
+              <view class="occ-left">
+                <text class="occ-label" style="color: {{item.muted}};">预约人数</text>
+                <text class="occ-frac">已约 {{item.booked}}/{{item.max}} 人</text>
+              </view>
               <text class="occ-status" style="color: {{item.statusColor}};">{{item.statusLabel}}</text>
             </view>
-            <view class="track {{item.isSel ? 'dark' : ''}}">
+            <view class="track {{item.isSel ? 'on' : ''}}">
               <view class="fill" style="width: {{item.fillPct}}%; background: {{item.barColor}};"></view>
               <view wx:if="{{item.showShimmer}}" class="shimmer" style="width: {{item.fillPct}}%;"></view>
-            </view>
-            <view class="occ-row bottom">
-              <text class="occ-frac">0</text>
-              <text class="occ-frac">已约 {{item.booked}}/{{item.max}} 人</text>
             </view>
           </view>
         </view>
@@ -98,15 +97,6 @@
       <text class="summary-slot">{{selectedSlotLabel}}</text>
     </view>
     <view class="field">
-      <text class="label">到访人数</text>
-      <view class="stepper">
-        <view class="step-btn minus" bindtap="onMinus">−</view>
-        <text class="step-num serif">{{people}}</text>
-        <view class="step-btn plus" bindtap="onPlus">+</view>
-        <text class="step-hint">最多 {{maxPeople}} 人</text>
-      </view>
-    </view>
-    <view class="field">
       <text class="label">姓名</text>
       <input class="input" value="{{name}}" placeholder="请输入您的姓名" placeholder-class="ph" bindinput="onNameInput" />
     </view>
@@ -114,8 +104,26 @@
       <text class="label">手机号</text>
       <input class="input" type="number" maxlength="11" value="{{phone}}" placeholder="请输入您的手机号" placeholder-class="ph" bindinput="onPhoneInput" />
     </view>
-    <text class="agree">提交即表示您同意我们的预约须知及隐私政策</text>
-    <view class="btn {{canSubmit ? '' : 'off'}}" bindtap="onConfirm">
+    <view class="notice">
+      <text class="notice-title serif">到店须知</text>
+      <text class="notice-heading">{{noticeHeading}}</text>
+      <view wx:for="{{noticeItems}}" wx:key="*this" class="notice-row">
+        <text class="notice-no">{{index + 1}}</text>
+        <text class="notice-text">{{item}}</text>
+      </view>
+      <text class="notice-foot">{{noticeFoot}}</text>
+      <view
+        id="notice-check"
+        class="notice-check {{noticeRead ? 'on' : ''}} {{noticeShake ? 'shake' : ''}}"
+        bindtap="onToggleNotice"
+      >
+        <view class="check-box">
+          <view wx:if="{{noticeRead}}" class="check-mark"></view>
+        </view>
+        <text class="check-label">我已阅读并知晓以上到店说明</text>
+      </view>
+    </view>
+    <view class="btn {{fieldsReady ? '' : 'off'}}" bindtap="onConfirm">
       <text class="btn-text serif">确认预约</text>
     </view>
   </view>
@@ -136,10 +144,6 @@
           <text class="sg-v">{{name}}</text>
         </view>
         <view class="sg">
-          <text class="sg-k">人数</text>
-          <text class="sg-v">{{successPeople}}</text>
-        </view>
-        <view class="sg">
           <text class="sg-k">日期</text>
           <text class="sg-v">{{successDate}}</text>
         </view>
@@ -149,10 +153,14 @@
         </view>
       </view>
       <view class="success-foot">
-        <text class="success-note">📍 小森林书店 · 请按时到店，过时名额自动释放</text>
+        <text class="success-note">📍 泛太大厦2号楼1层 · 请按时到店，过时名额自动释放</text>
       </view>
     </view>
-    <view class="btn" bindtap="onReset">
+    <view class="success-notice">
+      <text class="success-notice-title serif">到店请留意</text>
+      <text wx:for="{{successNoticeLines}}" wx:key="*this" class="success-notice-line">{{item}}</text>
+    </view>
+    <view class="btn success-btn" bindtap="onReset">
       <text class="btn-text serif">再次预约</text>
     </view>
   </view>

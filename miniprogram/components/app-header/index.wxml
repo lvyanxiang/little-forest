@@ -1,15 +1,25 @@
-<view class="header" style="padding-top: {{statusBarHeight}}px;">
-  <view wx:if="{{title}}" class="title-wrap">
+<view class="header {{overlay ? 'overlay' : ''}}" style="padding-top: {{statusBarHeight}}px;">
+  <view
+    wx:if="{{title}}"
+    class="nav-row"
+    style="height: {{navBarHeight}}px; padding-right: {{menuRight}}px;"
+  >
     <text class="title serif">{{title}}</text>
   </view>
-  <view wx:else class="brand-wrap">
-    <view class="brand-row">
-      <image class="logo" src="/assets/logo.svg" mode="aspectFit" />
-      <view class="brand-text">
-        <text class="en">LITTLE FOREST</text>
-        <text class="zh serif">小森林书店</text>
-      </view>
+  <view
+    wx:else
+    class="nav-row"
+    style="height: {{navBarHeight}}px; padding-right: {{menuRight}}px;"
+  >
+    <image
+      class="logo"
+      src="/assets/logo.svg"
+      mode="aspectFit"
+      style="width: {{menuHeight}}px; height: {{menuHeight}}px;"
+    />
+    <view class="brand-text">
+      <text class="en">LITTLE FOREST</text>
+      <text class="zh serif">小森林书店</text>
     </view>
-    <text class="sub">到店预约 · 阅读有约</text>
   </view>
 </view>

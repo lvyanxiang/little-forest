@@ -1,12 +1,12 @@
 import { Booking, cancelBooking, getBookings, getConfirmedCount } from '../../utils/booking'
 import { formatFullDate, maskPhone, startOfToday } from '../../utils/date'
+import { getLayoutMetrics } from '../../utils/layout'
 import { syncTabBar } from '../../utils/tab'
 
 interface BookingView {
   id: string
   dateText: string
   slot: string
-  peopleText: string
   name: string
   phoneMasked: string
   status: string
@@ -18,7 +18,6 @@ function toView(item: Booking): BookingView {
     id: item.id,
     dateText: formatFullDate(item.dateTs),
     slot: item.slot,
-    peopleText: `${item.people} 人`,
     name: item.name,
     phoneMasked: maskPhone(item.phone),
     status: item.status,
@@ -34,6 +33,10 @@ Page({
     upcoming: [] as BookingView[],
     past: [] as BookingView[],
     cancelTarget: '',
+    pageBottom: 80,
+  },
+  onLoad() {
+    this.setData({ pageBottom: getLayoutMetrics().tabBarHeight + 16 })
   },
   onShow() {
     this.refresh()
@@ -59,6 +62,9 @@ Page({
       upcoming,
       past,
     })
+  },
+  onGoReserve() {
+    wx.switchTab({ url: '/pages/reserve/reserve' })
   },
   onAskCancel(e: WechatMiniprogram.TouchEvent) {
     const id = String(e.currentTarget.dataset.id || '')

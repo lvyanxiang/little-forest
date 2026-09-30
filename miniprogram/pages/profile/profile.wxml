@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page" style="padding-bottom: {{pageBottom}}px;">
   <app-header title="我的预约" />
 
   <view class="user-card">
@@ -15,9 +15,9 @@
 
   <view class="section">
     <text class="section-title serif">即将到来</text>
-    <view wx:if="{{upcoming.length === 0}}" class="empty">
+    <view wx:if="{{upcoming.length === 0}}" class="empty" bindtap="onGoReserve">
       <text class="empty-icon">📖</text>
-      <text class="empty-text">暂无即将到来的预约</text>
+      <text class="empty-text">暂无预约，点击去预约</text>
     </view>
     <view wx:else class="up-list">
       <view wx:for="{{upcoming}}" wx:key="id" class="up-card">
@@ -28,7 +28,7 @@
               <text class="status">已确认</text>
             </view>
             <text class="up-date serif">{{item.dateText}}</text>
-            <text class="up-slot">{{item.slot}} · {{item.peopleText}}</text>
+            <text class="up-slot">{{item.slot}}</text>
           </view>
           <view class="cancel-btn" data-id="{{item.id}}" bindtap="onAskCancel">取消预约</view>
         </view>

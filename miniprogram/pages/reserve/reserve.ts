@@ -1,5 +1,7 @@
 import { STORE_HOURS, addBooking, getSlotAvailability } from '../../utils/booking'
 import { addDays, diffDays, formatFullDate, formatShortDate, formatWeekday, startOfToday } from '../../utils/date'
+import { getLayoutMetrics } from '../../utils/layout'
+import { NOTICE_FOOT, NOTICE_HEADING, NOTICE_ITEMS, SUCCESS_NOTICE_LINES } from '../../utils/notice'
 import { syncTabBar } from '../../utils/tab'
 
 type ResvStep = 'pick' | 'form' | 'success'
@@ -45,21 +47,21 @@ function buildQuickDates(selectedTs: number): DateChip[] {
   })
 }
 
+let noticeShakeTimer: ReturnType<typeof setTimeout> | null = null
+
 function buildSlots(selectedTs: number, selectedSlot: number | null): SlotView[] {
   return STORE_HOURS.map((slot) => {
     const { booked, avail, isFull, fillPct } = getSlotAvailability(selectedTs, slot.id, slot.max)
     const isSel = selectedSlot === slot.id
-    const barColor = isSel
-      ? '#8FAF6B'
-      : isFull
-        ? '#8A7558'
-        : fillPct >= 80
-          ? '#B87C4C'
-          : fillPct >= 50
-            ? '#C4A44C'
-            : '#5C7A3A'
+    const barColor = isFull
+      ? '#8A7558'
+      : fillPct >= 80
+        ? '#B87C4C'
+        : fillPct >= 50
+          ? '#C4A44C'
+          : '#8A7558'
     const statusLabel = isFull ? '已约满' : avail <= 2 ? `仅剩 ${avail} 个名额` : `剩余 ${avail} 个名额`
-    const statusColor = isSel ? '#8FAF6B' : isFull ? '#8A7558' : avail <= 2 ? '#B87C4C' : '#8A7558'
+    const statusColor = isFull ? '#8A7558' : avail <= 2 ? '#B87C4C' : '#8A7558'
     return {
       id: slot.id,
       label: slot.label,
@@ -72,10 +74,10 @@ function buildSlots(selectedTs: number, selectedSlot: number | null): SlotView[]
       barColor,
       statusLabel,
       statusColor,
-      cardBg: isSel ? '#1E3A1E' : isFull ? '#F0EBE0' : '#F5EFE0',
-      cardBorder: isSel ? 'transparent' : isFull ? '#D8CFC4' : '#C4B49A',
-      timeColor: isSel ? '#F5EFE0' : isFull ? '#8A7558' : '#1E3A1E',
-      muted: isSel ? '#8FAF6B' : '#8A7558',
+      cardBg: isSel ? '#EDE4CE' : isFull ? '#F0EBE0' : '#F5EFE0',
+      cardBorder: isSel ? '#5C7A3A' : isFull ? '#D8CFC4' : '#C4B49A',
+      timeColor: isFull ? '#8A7558' : '#1E3A1E',
+      muted: '#8A7558',
       showShimmer: fillPct >= 70 && !isFull,
     }
   })
@@ -93,15 +95,21 @@ Page({
     quickDates: [] as DateChip[],
     slots: [] as SlotView[],
     showCalendar: false,
-    people: 1,
-    maxPeople: 1,
     name: '',
     phone: '',
+    noticeRead: false,
+    noticeShake: false,
+    fieldsReady: false,
     canSubmit: false,
-    successPeople: '',
     successDate: '',
+    pageBottom: 80,
+    noticeHeading: NOTICE_HEADING,
+    noticeItems: NOTICE_ITEMS,
+    noticeFoot: NOTICE_FOOT,
+    successNoticeLines: SUCCESS_NOTICE_LINES,
   },
   onLoad() {
+    this.setData({ pageBottom: getLayoutMetrics().tabBarHeight })
     this.refreshPick()
   },
   onShow() {
@@ -159,49 +167,84 @@ Page({
     this.refreshPick()
   },
   onNext() {
-    const { selectedSlot, selectedTs } = this.data
+    const { selectedSlot } = this.data
     if (!selectedSlot) return
     const slot = STORE_HOURS.find((item) => item.id === selectedSlot)
     if (!slot) return
-    const { avail } = getSlotAvailability(selectedTs, slot.id, slot.max)
     this.setData({
       step: 'form',
-      people: 1,
-      maxPeople: Math.max(1, avail),
-      canSubmit: Boolean(this.data.name && this.data.phone),
+      fieldsReady: this.isFieldsReady(this.data.name, this.data.phone),
+      canSubmit: this.isFormReady(this.data.name, this.data.phone, this.data.noticeRead),
     })
   },
   onBackPick() {
     this.setData({ step: 'pick' })
     this.refreshPick()
   },
-  onMinus() {
-    const people = Math.max(1, this.data.people - 1)
-    this.setData({ people })
+  isFieldsReady(name: string, phone: string) {
+    return Boolean(name.trim() && phone.trim())
   },
-  onPlus() {
-    const people = Math.min(this.data.maxPeople, this.data.people + 1)
-    this.setData({ people })
+  isFormReady(name: string, phone: string, noticeRead: boolean) {
+    return this.isFieldsReady(name, phone) && noticeRead
+  },
+  shakeNotice() {
+    if (noticeShakeTimer) {
+      clearTimeout(noticeShakeTimer)
+      noticeShakeTimer = null
+    }
+    this.setData({ noticeShake: false })
+    wx.nextTick(() => {
+      this.setData({ noticeShake: true })
+      wx.vibrateShort({ type: 'medium' })
+      wx.pageScrollTo({
+        selector: '#notice-check',
+        offsetTop: -80,
+        duration: 240,
+      })
+      noticeShakeTimer = setTimeout(() => {
+        this.setData({ noticeShake: false })
+        noticeShakeTimer = null
+      }, 520)
+    })
   },
   onNameInput(e: WechatMiniprogram.Input) {
     const name = e.detail.value
     this.setData({
       name,
-      canSubmit: Boolean(name.trim() && this.data.phone.trim()),
+      fieldsReady: this.isFieldsReady(name, this.data.phone),
+      canSubmit: this.isFormReady(name, this.data.phone, this.data.noticeRead),
     })
   },
   onPhoneInput(e: WechatMiniprogram.Input) {
     const phone = e.detail.value
     this.setData({
       phone,
-      canSubmit: Boolean(this.data.name.trim() && phone.trim()),
+      fieldsReady: this.isFieldsReady(this.data.name, phone),
+      canSubmit: this.isFormReady(this.data.name, phone, this.data.noticeRead),
+    })
+  },
+  onToggleNotice() {
+    const noticeRead = !this.data.noticeRead
+    this.setData({
+      noticeRead,
+      noticeShake: false,
+      canSubmit: this.isFormReady(this.data.name, this.data.phone, noticeRead),
     })
   },
   onConfirm() {
-    const { selectedSlot, selectedTs, name, phone, people } = this.data
+    const { selectedSlot, selectedTs, name, phone, noticeRead } = this.data
     const trimmedName = name.trim()
     const trimmedPhone = phone.trim()
-    if (!selectedSlot || !trimmedName || !trimmedPhone) return
+    if (!noticeRead) {
+      this.shakeNotice()
+    }
+    if (!selectedSlot || !trimmedName || !trimmedPhone) {
+      if (!trimmedName || !trimmedPhone) {
+        wx.showToast({ title: '请填写姓名和手机号', icon: 'none' })
+      }
+      return
+    }
+    if (!noticeRead) return
     if (!/^1\d{10}$/.test(trimmedPhone)) {
       wx.showToast({ title: '请输入正确的手机号', icon: 'none' })
       return
@@ -213,7 +256,7 @@ Page({
       dateTs: selectedTs,
       slotId: slot.id,
       slot: slot.label,
-      people,
+      people: 1,
       name: trimmedName,
       phone: trimmedPhone,
       status: 'confirmed',
@@ -222,7 +265,6 @@ Page({
       step: 'success',
       name: trimmedName,
       phone: trimmedPhone,
-      successPeople: `${people} 人`,
       successDate: formatShortDate(selectedTs),
     })
     syncTabBar(this, 1)
@@ -236,9 +278,17 @@ Page({
       selectedSlotLabel: '',
       name: '',
       phone: '',
-      people: 1,
+      noticeRead: false,
+      noticeShake: false,
+      fieldsReady: false,
       canSubmit: false,
     })
     this.refreshPick()
+  },
+  onUnload() {
+    if (noticeShakeTimer) {
+      clearTimeout(noticeShakeTimer)
+      noticeShakeTimer = null
+    }
   },
 })

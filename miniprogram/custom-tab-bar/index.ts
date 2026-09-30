@@ -1,8 +1,11 @@
+import { getLayoutMetrics } from '../utils/layout'
+
 Component({
   data: {
     selected: 0,
     badge: 0,
     hidden: false,
+    safeBottom: 8,
     list: [
       {
         pagePath: '/pages/home/home',
@@ -23,6 +26,12 @@ Component({
         iconActive: '/assets/icon-profile-active.svg',
       },
     ],
+  },
+  lifetimes: {
+    attached() {
+      const { safeBottom } = getLayoutMetrics()
+      this.setData({ safeBottom })
+    },
   },
   methods: {
     onSwitch(e: WechatMiniprogram.TouchEvent) {

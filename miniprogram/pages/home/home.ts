@@ -1,7 +1,14 @@
+import { getHomeHeroHeight, getLayoutMetrics } from '../../utils/layout'
+import { HOME_NOTICE_TEXT } from '../../utils/notice'
+import { STORE, openStoreMap } from '../../utils/store'
 import { syncTabBar } from '../../utils/tab'
 
 Page({
   data: {
+    heroHeight: 260,
+    pageBottom: 80,
+    homeNoticeText: HOME_NOTICE_TEXT,
+    store: STORE,
     features: [
       { icon: '🌿', title: '自然光阅读区', desc: '大面积落地窗，让阳光与书页同行' },
       { icon: '☕', title: '手冲咖啡吧台', desc: '精选单品咖啡，阅读伴侣' },
@@ -20,6 +27,13 @@ Page({
       { month: '10月', day: '26', weekday: '周六', title: '手作书签工作坊', desc: '压花·烫金·手绑装帧，限20人', tag: '工作坊' },
     ],
   },
+  onLoad() {
+    const metrics = getLayoutMetrics()
+    this.setData({
+      heroHeight: getHomeHeroHeight(metrics),
+      pageBottom: metrics.tabBarHeight + 16,
+    })
+  },
   onShow() {
     syncTabBar(this, 0)
   },
@@ -27,6 +41,9 @@ Page({
     wx.switchTab({ url: '/pages/reserve/reserve' })
   },
   onCall() {
-    wx.makePhoneCall({ phoneNumber: '057188886699' })
+    wx.makePhoneCall({ phoneNumber: STORE.phone })
+  },
+  onOpenMap() {
+    openStoreMap()
   },
 })
