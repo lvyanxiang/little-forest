@@ -1,0 +1,23 @@
+page {
+  --forest-deep: #1E3A1E;
+  --forest: #2D5016;
+  --moss: #5C7A3A;
+  --sage: #8FAF6B;
+  --cream: #F5EFE0;
+  --cream-dark: #EDE4CE;
+  --bark: #8A7558;
+  --bark-light: #C4B49A;
+  --paper: #FDFAF3;
+  --border: #D8CFC4;
+  background-color: #FDFAF3;
+  color: #1E3A1E;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+.serif {
+  font-family: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", serif;
+}
+
+.sans {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}

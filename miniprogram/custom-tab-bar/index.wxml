@@ -1,0 +1,15 @@
+<view class="tab-bar {{hidden ? 'hidden' : ''}}">
+  <view
+    wx:for="{{list}}"
+    wx:key="pagePath"
+    class="item"
+    data-path="{{item.pagePath}}"
+    bindtap="onSwitch"
+  >
+    <view class="icon-wrap">
+      <image class="icon" src="{{selected === index ? item.iconActive : item.icon}}" mode="aspectFit" />
+      <view wx:if="{{index === 2 && badge > 0}}" class="badge">{{badge}}</view>
+    </view>
+    <text class="label {{selected === index ? 'on' : ''}}">{{item.text}}</text>
+  </view>
+</view>

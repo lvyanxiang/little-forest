@@ -1,0 +1,15 @@
+<view class="header" style="padding-top: {{statusBarHeight}}px;">
+  <view wx:if="{{title}}" class="title-wrap">
+    <text class="title serif">{{title}}</text>
+  </view>
+  <view wx:else class="brand-wrap">
+    <view class="brand-row">
+      <image class="logo" src="/assets/logo.svg" mode="aspectFit" />
+      <view class="brand-text">
+        <text class="en">LITTLE FOREST</text>
+        <text class="zh serif">小森林书店</text>
+      </view>
+    </view>
+    <text class="sub">到店预约 · 阅读有约</text>
+  </view>
+</view>

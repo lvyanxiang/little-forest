@@ -1,0 +1,90 @@
+<view class="page">
+  <app-header />
+
+  <view class="hero">
+    <image class="hero-img" src="/assets/hero.jpg" mode="aspectFill" />
+    <view class="hero-mask"></view>
+    <view class="hero-copy">
+      <text class="hero-en">LITTLE FOREST BOOKSTORE</text>
+      <view class="hero-title serif">
+        <text>在书与自然之间</text>
+        <text>找到片刻宁静</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="cta-wrap">
+    <view class="cta" bindtap="onReserve">
+      <image class="cta-icon" src="/assets/icon-reserve-light.svg" mode="aspectFit" />
+      <text class="cta-text serif">立即预约到店</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <text class="section-title serif">书店特色</text>
+    <view class="feature-grid">
+      <view wx:for="{{features}}" wx:key="title" class="feature-card">
+        <text class="feature-icon">{{item.icon}}</text>
+        <text class="feature-title serif">{{item.title}}</text>
+        <text class="feature-desc">{{item.desc}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section section-bleed">
+    <view class="section-row">
+      <text class="section-title serif">本月精选书单</text>
+      <text class="section-sub">10月 · 秋日阅读</text>
+    </view>
+    <scroll-view class="h-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="book-row">
+        <view wx:for="{{books}}" wx:key="title" class="book" style="background: {{item.color}};">
+          <text class="book-title serif">{{item.title}}</text>
+          <text class="book-author">{{item.author}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="section">
+    <text class="section-title serif">近期活动</text>
+    <view class="event-list">
+      <view wx:for="{{events}}" wx:key="title" class="event-card">
+        <view class="event-date">
+          <text class="event-month">{{item.month}}</text>
+          <text class="event-day serif">{{item.day}}</text>
+          <text class="event-week">{{item.weekday}}</text>
+        </view>
+        <view class="event-body">
+          <view class="event-top">
+            <text class="event-title serif">{{item.title}}</text>
+            <text class="event-tag">{{item.tag}}</text>
+          </view>
+          <text class="event-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="store">
+    <view class="store-cover">
+      <image class="store-img" src="/assets/store.jpg" mode="aspectFill" />
+      <view class="store-mask"></view>
+      <text class="store-name serif">小森林书店</text>
+    </view>
+    <view class="store-info">
+      <view class="store-row">
+        <text class="store-ico">📍</text>
+        <text class="store-text">杭州市西湖区文一西路 108 号</text>
+      </view>
+      <view class="store-row">
+        <text class="store-ico">🕘</text>
+        <text class="store-text">每日 09:00 – 19:00（周一闭馆）</text>
+      </view>
+      <view class="store-row" bindtap="onCall">
+        <text class="store-ico">📞</text>
+        <text class="store-text">0571-8888-6699</text>
+      </view>
+    </view>
+  </view>
+</view>

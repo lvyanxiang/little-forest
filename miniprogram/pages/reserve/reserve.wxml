@@ -1,0 +1,166 @@
+<view class="page {{step === 'pick' ? 'page-pick' : ''}}">
+  <app-header title="到店预约" />
+
+  <block wx:if="{{step === 'pick'}}">
+    <scroll-view class="pick-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="pick-body">
+      <view class="date-head">
+        <view class="date-title-row">
+          <text class="block-title serif">选择日期</text>
+          <text class="block-sub">{{selectedDateText}}</text>
+        </view>
+        <view class="more-btn {{isQuickDate ? '' : 'on'}}" bindtap="onOpenCalendar">
+          <text class="more-text">{{moreDateLabel}}</text>
+        </view>
+      </view>
+
+      <scroll-view class="date-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="date-row">
+          <view
+            wx:for="{{quickDates}}"
+            wx:key="ts"
+            class="date-chip {{item.selected ? 'on' : ''}}"
+            data-ts="{{item.ts}}"
+            bindtap="onSelectDate"
+          >
+            <text class="chip-month">{{item.monthLabel}}</text>
+            <text class="chip-day serif">{{item.day}}</text>
+            <text class="chip-week">{{item.weekday}}</text>
+          </view>
+          <view class="date-chip dash" bindtap="onOpenCalendar">
+            <image class="dash-icon" src="/assets/icon-reserve.svg" mode="aspectFit" />
+            <text class="chip-week">日历</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="divider"></view>
+
+      <view class="slot-head">
+        <text class="block-title serif">选择时段</text>
+        <text class="block-sub">每时段限额保障体验</text>
+      </view>
+
+      <view class="slot-list">
+        <view
+          wx:for="{{slots}}"
+          wx:key="id"
+          class="slot {{item.isFull ? 'full' : ''}}"
+          style="background: {{item.cardBg}}; border-color: {{item.cardBorder}};"
+          data-id="{{item.id}}"
+          data-full="{{item.isFull}}"
+          bindtap="onSelectSlot"
+        >
+          <view class="slot-top">
+            <text class="slot-time serif" style="color: {{item.timeColor}};">{{item.label}}</text>
+            <view wx:if="{{item.isSel}}" class="sel-badge">
+              <text class="sel-text">已选</text>
+            </view>
+            <view wx:elif="{{item.isFull}}" class="full-badge">已约满</view>
+          </view>
+          <view class="occ">
+            <view class="occ-row">
+              <text class="occ-label" style="color: {{item.muted}};">预约人数</text>
+              <text class="occ-status" style="color: {{item.statusColor}};">{{item.statusLabel}}</text>
+            </view>
+            <view class="track {{item.isSel ? 'dark' : ''}}">
+              <view class="fill" style="width: {{item.fillPct}}%; background: {{item.barColor}};"></view>
+              <view wx:if="{{item.showShimmer}}" class="shimmer" style="width: {{item.fillPct}}%;"></view>
+            </view>
+            <view class="occ-row bottom">
+              <text class="occ-frac">0</text>
+              <text class="occ-frac">已约 {{item.booked}}/{{item.max}} 人</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    </scroll-view>
+
+    <view class="sticky">
+      <text class="sticky-hint {{selectedSlot ? 'on' : ''}}">
+        {{selectedSlot ? '已选：' + selectedDateText + ' · ' + selectedSlotLabel : '请选择到店时段'}}
+      </text>
+      <view class="btn {{selectedSlot ? '' : 'off'}}" bindtap="onNext">
+        <text class="btn-text serif">下一步，填写信息</text>
+      </view>
+    </view>
+  </block>
+
+  <view wx:elif="{{step === 'form'}}" class="form-body">
+    <view class="back" bindtap="onBackPick">
+      <view class="back-chevron"></view>
+      <text>返回</text>
+    </view>
+    <view class="summary">
+      <text class="summary-k">预约信息</text>
+      <text class="summary-date serif">{{selectedDateText}}</text>
+      <text class="summary-slot">{{selectedSlotLabel}}</text>
+    </view>
+    <view class="field">
+      <text class="label">到访人数</text>
+      <view class="stepper">
+        <view class="step-btn minus" bindtap="onMinus">−</view>
+        <text class="step-num serif">{{people}}</text>
+        <view class="step-btn plus" bindtap="onPlus">+</view>
+        <text class="step-hint">最多 {{maxPeople}} 人</text>
+      </view>
+    </view>
+    <view class="field">
+      <text class="label">姓名</text>
+      <input class="input" value="{{name}}" placeholder="请输入您的姓名" placeholder-class="ph" bindinput="onNameInput" />
+    </view>
+    <view class="field">
+      <text class="label">手机号</text>
+      <input class="input" type="number" maxlength="11" value="{{phone}}" placeholder="请输入您的手机号" placeholder-class="ph" bindinput="onPhoneInput" />
+    </view>
+    <text class="agree">提交即表示您同意我们的预约须知及隐私政策</text>
+    <view class="btn {{canSubmit ? '' : 'off'}}" bindtap="onConfirm">
+      <text class="btn-text serif">确认预约</text>
+    </view>
+  </view>
+
+  <view wx:else class="success-body">
+    <view class="success-logo-wrap">
+      <view class="success-logo">
+        <image src="/assets/logo.svg" class="success-img" mode="aspectFit" />
+      </view>
+      <view class="success-ring"></view>
+    </view>
+    <text class="success-title serif">预约成功</text>
+    <text class="success-sub">期待在小森林与您相遇</text>
+    <view class="success-card">
+      <view class="success-grid">
+        <view class="sg">
+          <text class="sg-k">姓名</text>
+          <text class="sg-v">{{name}}</text>
+        </view>
+        <view class="sg">
+          <text class="sg-k">人数</text>
+          <text class="sg-v">{{successPeople}}</text>
+        </view>
+        <view class="sg">
+          <text class="sg-k">日期</text>
+          <text class="sg-v">{{successDate}}</text>
+        </view>
+        <view class="sg">
+          <text class="sg-k">时段</text>
+          <text class="sg-v">{{selectedSlotLabel}}</text>
+        </view>
+      </view>
+      <view class="success-foot">
+        <text class="success-note">📍 小森林书店 · 请按时到店，过时名额自动释放</text>
+      </view>
+    </view>
+    <view class="btn" bindtap="onReset">
+      <text class="btn-text serif">再次预约</text>
+    </view>
+  </view>
+
+  <calendar-modal
+    show="{{showCalendar}}"
+    selectedTs="{{selectedTs}}"
+    bind:select="onCalendarSelect"
+    bind:close="onCloseCalendar"
+  />
+</view>

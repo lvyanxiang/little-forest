@@ -1,0 +1,33 @@
+<view wx:if="{{show}}" class="mask" bindtap="onClose" catchtouchmove="noop">
+  <view class="sheet" catchtap="noop">
+    <view class="handle-wrap">
+      <view class="handle"></view>
+    </view>
+    <view class="nav">
+      <view class="nav-btn {{canPrev ? '' : 'disabled'}}" bindtap="onPrev">
+        <view class="chevron left"></view>
+      </view>
+      <text class="month serif">{{monthLabel}}</text>
+      <view class="nav-btn {{canNext ? '' : 'disabled'}}" bindtap="onNext">
+        <view class="chevron right"></view>
+      </view>
+    </view>
+    <view class="week-row">
+      <text wx:for="{{weekdays}}" wx:key="*this" class="week-cell">{{item}}</text>
+    </view>
+    <view class="grid">
+      <view
+        wx:for="{{cells}}"
+        wx:key="key"
+        class="day {{item.empty ? 'empty' : ''}} {{item.isSel ? 'sel' : ''}} {{item.disabled ? 'off' : ''}}"
+        data-ts="{{item.ts}}"
+        data-disabled="{{item.disabled || item.empty}}"
+        bindtap="onPick"
+      >
+        <text wx:if="{{!item.empty}}" class="day-num serif">{{item.day}}</text>
+        <view wx:if="{{item.isToday && !item.isSel}}" class="today-dot"></view>
+      </view>
+    </view>
+    <text class="hint">可预约范围：今日起 90 天内</text>
+  </view>
+</view>

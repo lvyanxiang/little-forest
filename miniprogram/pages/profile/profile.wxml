@@ -1,0 +1,72 @@
+<view class="page">
+  <app-header title="我的预约" />
+
+  <view class="user-card">
+    <view class="avatar">🌿</view>
+    <view class="user-meta">
+      <text class="user-name serif">{{displayName}}</text>
+      <text class="user-phone">{{displayPhone}}</text>
+    </view>
+    <view class="user-count">
+      <text class="count-num serif">{{confirmedCount}}</text>
+      <text class="count-label">累计预约</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <text class="section-title serif">即将到来</text>
+    <view wx:if="{{upcoming.length === 0}}" class="empty">
+      <text class="empty-icon">📖</text>
+      <text class="empty-text">暂无即将到来的预约</text>
+    </view>
+    <view wx:else class="up-list">
+      <view wx:for="{{upcoming}}" wx:key="id" class="up-card">
+        <view class="up-top">
+          <view class="up-main">
+            <view class="status-row">
+              <view class="dot"></view>
+              <text class="status">已确认</text>
+            </view>
+            <text class="up-date serif">{{item.dateText}}</text>
+            <text class="up-slot">{{item.slot}} · {{item.peopleText}}</text>
+          </view>
+          <view class="cancel-btn" data-id="{{item.id}}" bindtap="onAskCancel">取消预约</view>
+        </view>
+        <view class="up-foot">
+          <view class="meta">
+            <text class="meta-k">姓名</text>
+            <text class="meta-v">{{item.name}}</text>
+          </view>
+          <view class="meta">
+            <text class="meta-k">手机</text>
+            <text class="meta-v">{{item.phoneMasked}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{past.length > 0}}" class="section">
+    <text class="section-title serif">历史记录</text>
+    <view class="past-list">
+      <view wx:for="{{past}}" wx:key="id" class="past-card">
+        <view>
+          <text class="past-date">{{item.dateText}}</text>
+          <text class="past-slot">{{item.slot}}</text>
+        </view>
+        <text class="past-tag">{{item.statusText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{cancelTarget}}" class="mask" catchtouchmove="noop" bindtap="onCloseCancel">
+    <view class="dialog" catchtap="noop">
+      <text class="dialog-title serif">确认取消预约？</text>
+      <text class="dialog-desc">取消后名额将释放，可重新预约</text>
+      <view class="dialog-actions">
+        <view class="dialog-btn ghost" bindtap="onCloseCancel">我再想想</view>
+        <view class="dialog-btn solid" bindtap="onConfirmCancel">确认取消</view>
+      </view>
+    </view>
+  </view>
+</view>
