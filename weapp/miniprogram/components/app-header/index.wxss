@@ -1,5 +1,5 @@
 .header {
-  background: #1E3A1E;
+  background: #FFFFFF;
   box-sizing: border-box;
 }
 
@@ -22,7 +22,7 @@
 .title {
   font-size: 34rpx;
   font-weight: 600;
-  color: #F5EFE0;
+  color: #242522;
   line-height: 1.2;
 }
 
@@ -39,7 +39,7 @@
 
 .en {
   font-size: 18rpx;
-  color: #8FAF6B;
+  color: #70726D;
   letter-spacing: 0.16em;
   line-height: 1.2;
 }
@@ -47,6 +47,6 @@
 .zh {
   font-size: 30rpx;
   font-weight: 600;
-  color: #F5EFE0;
+  color: #242522;
   line-height: 1.2;
 }

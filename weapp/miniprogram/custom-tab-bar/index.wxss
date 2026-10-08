@@ -8,8 +8,8 @@
   align-items: flex-start;
   justify-content: space-around;
   padding: 16rpx 32rpx 10rpx;
-  background: #FDFAF3;
-  border-top: 1rpx solid #D8CFC4;
+  background: #FFFFFF;
+  border-top: 1rpx solid #E5E6E2;
   box-sizing: border-box;
 }
 
@@ -44,8 +44,8 @@
   height: 32rpx;
   padding: 0 6rpx;
   border-radius: 32rpx;
-  background: #5C7A3A;
-  color: #F5EFE0;
+  background: #646660;
+  color: #F7F7F5;
   font-size: 18rpx;
   line-height: 32rpx;
   text-align: center;
@@ -54,10 +54,10 @@
 
 .label {
   font-size: 20rpx;
-  color: #C4B49A;
+  color: #C9CBC6;
 }
 
 .label.on {
-  color: #1E3A1E;
+  color: #242522;
   font-weight: 500;
 }

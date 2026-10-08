@@ -2,5 +2,5 @@
   "usingComponents": {
     "app-header": "/components/app-header/index"
   },
-  "backgroundColor": "#FDFAF3"
+  "backgroundColor": "#FFFFFF"
 }

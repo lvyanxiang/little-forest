@@ -3,8 +3,10 @@ import { BookingsPage } from './pages/BookingsPage'
 import { NoticePage } from './pages/NoticePage'
 import { SlotsPage } from './pages/SlotsPage'
 import { StorePage } from './pages/StorePage'
+import { HomePage } from './pages/HomePage'
 
 const MENUS = [
+  { id: 'home', label: '首页设置' },
   { id: 'store', label: '门店信息' },
   { id: 'slots', label: '时段与名额' },
   { id: 'notice', label: '预约须知' },
@@ -14,7 +16,7 @@ const MENUS = [
 type MenuId = (typeof MENUS)[number]['id']
 
 function App() {
-  const [menu, setMenu] = useState<MenuId>('store')
+  const [menu, setMenu] = useState<MenuId>('home')
 
   return (
     <div className="flex min-h-dvh flex-col bg-paper text-forest md:flex-row">
@@ -42,6 +44,7 @@ function App() {
         <h1 className="mb-2 mt-0 text-2xl font-semibold md:text-[28px]">
           {MENUS.find((item) => item.id === menu)?.label}
         </h1>
+        {menu === 'home' ? <HomePage /> : null}
         {menu === 'store' ? <StorePage /> : null}
         {menu === 'slots' ? <SlotsPage /> : null}
         {menu === 'notice' ? <NoticePage /> : null}

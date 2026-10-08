@@ -1,6 +1,6 @@
 {
   "usingComponents": {
-    "app-header": "/components/app-header/index"
+    "notice-modal": "/components/notice-modal/index"
   },
-  "backgroundColor": "#FDFAF3"
+  "backgroundColor": "#FFFFFF"
 }

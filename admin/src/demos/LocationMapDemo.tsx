@@ -1,3 +1,7 @@
+/**
+ * 地图接入参考：目前不在管理后台正式流程中使用。
+ * 若以后恢复可视化选点，可将此组件引入 StorePage，并把 onPick 的结果保存为经纬度。
+ */
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -18,12 +22,11 @@ type Props = {
   onPick: (latitude: number, longitude: number) => void
 }
 
-export function LocationMap({ latitude, longitude, onPick }: Props) {
+export function LocationMapDemo({ latitude, longitude, onPick }: Props) {
   const boxRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const markerRef = useRef<L.Marker | null>(null)
   const onPickRef = useRef(onPick)
-  const ignoreMoveRef = useRef(false)
   onPickRef.current = onPick
 
   useEffect(() => {
@@ -39,12 +42,10 @@ export function LocationMap({ latitude, longitude, onPick }: Props) {
       onPickRef.current(Number(nextLat.toFixed(6)), Number(nextLng.toFixed(6)))
     }
     marker.on('dragend', () => {
-      const pos = marker.getLatLng()
-      emit(pos.lat, pos.lng)
+      const position = marker.getLatLng()
+      emit(position.lat, position.lng)
     })
-    map.on('click', (event) => {
-      emit(event.latlng.lat, event.latlng.lng)
-    })
+    map.on('click', (event) => emit(event.latlng.lat, event.latlng.lng))
     mapRef.current = map
     markerRef.current = marker
     return () => {
@@ -55,19 +56,12 @@ export function LocationMap({ latitude, longitude, onPick }: Props) {
   }, [])
 
   useEffect(() => {
-    if (!mapRef.current || !markerRef.current) return
-    if (!latitude || !longitude) return
-    const next = L.latLng(latitude, longitude)
+    if (!mapRef.current || !markerRef.current || !latitude || !longitude) return
     const current = markerRef.current.getLatLng()
-    if (Math.abs(current.lat - latitude) < 0.000001 && Math.abs(current.lng - longitude) < 0.000001) {
-      return
-    }
-    ignoreMoveRef.current = true
+    if (Math.abs(current.lat - latitude) < 0.000001 && Math.abs(current.lng - longitude) < 0.000001) return
+    const next = L.latLng(latitude, longitude)
     markerRef.current.setLatLng(next)
     mapRef.current.setView(next, mapRef.current.getZoom())
-    mapRef.current.once('moveend', () => {
-      ignoreMoveRef.current = false
-    })
   }, [latitude, longitude])
 
   return <div ref={boxRef} className="h-64 w-full md:h-80" />

@@ -5,9 +5,15 @@ import { formatPhoneDisplay } from '../common/time';
 import { GeocodeService } from './geocode.service';
 import { StoreSetting } from './store-setting.entity';
 
-export type StorePayload = StoreSetting & {
+export type StorePayload = Omit<StoreSetting, 'homeHeroImage'> & {
   phoneDisplay: string;
+  homeHeroImageUrl: string;
   geocodeStatus?: 'updated' | 'unchanged' | 'skipped' | 'failed';
+};
+
+export type HomeHeroUpload = {
+  mimetype: string;
+  buffer: Buffer;
 };
 
 const DEFAULT_STORE: Omit<StoreSetting, 'id'> = {
@@ -33,6 +39,8 @@ const DEFAULT_STORE: Omit<StoreSetting, 'id'> = {
   noticeFoot: '请和我们一样，爱护爱惜这个空间。谢谢。',
   homeNoticeText:
     '自助无人值守，不是绝对安静的自习室，店内可能有交谈、音乐与走动，请先确认是否适合，书看完请放回书架，离开时关台灯、垃圾入桶',
+  homeHeroText: '讀著書\n一輩子很快就過去了\n去讀書吧\n讀一句\n便經歷一句',
+  homeHeroImage: null,
   successNoticeLines: [
     'Wi-Fi：377film　密码 xiaosenlinlin',
     '书看完请放回书架，离开时关掉台灯',
@@ -60,7 +68,47 @@ export class StoreService implements OnModuleInit {
 
   async getPublic(): Promise<StorePayload> {
     const store = await this.ensureDefault();
-    return { ...store, phoneDisplay: formatPhoneDisplay(store.phone) };
+    const imageState = await this.repo
+      .createQueryBuilder('store')
+      .select('store.homeHeroImage IS NOT NULL', 'hasImage')
+      .where('store.id = :id', { id: 1 })
+      .getRawOne<{ hasImage: boolean }>();
+    return this.toPayload(store, {
+      homeHeroImageUrl: imageState?.hasImage ? '/api/store/home-image' : '',
+    });
+  }
+
+  private toPayload(store: StoreSetting, extra: Partial<StorePayload> = {}): StorePayload {
+    const { homeHeroImage: _image, ...safeStore } = store;
+    return {
+      ...safeStore,
+      phoneDisplay: formatPhoneDisplay(store.phone),
+      homeHeroImageUrl: store.homeHeroImage ? '/api/store/home-image' : '',
+      ...extra,
+    };
+  }
+
+  async getHomeHeroImage() {
+    const store = await this.repo
+      .createQueryBuilder('store')
+      .addSelect('store.homeHeroImage')
+      .where('store.id = :id', { id: 1 })
+      .getOne();
+    const value = store?.homeHeroImage || '';
+    const matched = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(value);
+    if (!matched) return null;
+    return { mimeType: matched[1], data: Buffer.from(matched[2], 'base64') };
+  }
+
+  async updateHomeHeroImage(file: HomeHeroUpload): Promise<StorePayload> {
+    const store = await this.repo
+      .createQueryBuilder('store')
+      .addSelect('store.homeHeroImage')
+      .where('store.id = :id', { id: 1 })
+      .getOne();
+    const target = store || (await this.ensureDefault());
+    target.homeHeroImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    return this.toPayload(await this.repo.save(target));
   }
 
   async lookupAddress(address: string) {
@@ -129,10 +177,6 @@ export class StoreService implements OnModuleInit {
       Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined)),
     );
     const saved = await this.repo.save(store);
-    return {
-      ...saved,
-      phoneDisplay: formatPhoneDisplay(saved.phone),
-      geocodeStatus,
-    };
+    return this.toPayload(saved, { geocodeStatus });
   }
 }

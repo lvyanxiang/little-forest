@@ -1,4 +1,5 @@
 import { request } from './request'
+import { resolveApiAsset } from './config'
 
 export interface StoreInfo {
   name: string
@@ -13,6 +14,8 @@ export interface StoreInfo {
   noticeItems: string[]
   noticeFoot: string
   homeNoticeText: string
+  homeHeroText: string
+  homeHeroImageUrl: string
   successNoticeLines: string[]
 }
 
@@ -40,6 +43,8 @@ export const FALLBACK_STORE: StoreInfo = {
   noticeFoot: '请和我们一样，爱护爱惜这个空间。谢谢。',
   homeNoticeText:
     '自助无人值守，不是绝对安静的自习室，店内可能有交谈、音乐与走动，请先确认是否适合，书看完请放回书架，离开时关台灯、垃圾入桶',
+  homeHeroText: '讀著書\n一輩子很快就過去了\n去讀書吧\n讀一句\n便經歷一句',
+  homeHeroImageUrl: '',
   successNoticeLines: [
     'Wi-Fi：377film　密码 xiaosenlinlin',
     '书看完请放回书架，离开时关掉台灯',
@@ -55,6 +60,7 @@ export function getStore() {
 
 export async function fetchStore() {
   const store = await request<StoreInfo>('/store')
+  store.homeHeroImageUrl = resolveApiAsset(store.homeHeroImageUrl)
   cached = store
   return store
 }

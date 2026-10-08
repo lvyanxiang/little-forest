@@ -5,7 +5,7 @@
   bottom: 0;
   left: 0;
   z-index: 210;
-  background: rgba(30, 58, 30, 0.4);
+  background: rgba(20, 20, 20, 0.4);
   display: flex;
   align-items: flex-end;
 }
@@ -13,7 +13,7 @@
 .sheet {
   width: 100%;
   max-height: 86vh;
-  background: #FDFAF3;
+  background: #FFFFFF;
   border-radius: 48rpx 48rpx 0 0;
   padding: 16rpx 48rpx calc(32rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
@@ -31,21 +31,21 @@
   width: 80rpx;
   height: 8rpx;
   border-radius: 8rpx;
-  background: #D8CFC4;
+  background: #E5E6E2;
 }
 
 .title {
   display: block;
   font-size: 36rpx;
   font-weight: 600;
-  color: #1E3A1E;
+  color: #242522;
   margin-bottom: 12rpx;
 }
 
 .intro {
   display: block;
   font-size: 24rpx;
-  color: #8A7558;
+  color: #70726D;
   line-height: 1.6;
   margin-bottom: 24rpx;
 }
@@ -60,7 +60,7 @@
   display: block;
   font-size: 28rpx;
   font-weight: 600;
-  color: #1E3A1E;
+  color: #242522;
   margin-bottom: 20rpx;
 }
 
@@ -75,14 +75,14 @@
   flex-shrink: 0;
   font-size: 24rpx;
   font-weight: 600;
-  color: #5C7A3A;
+  color: #646660;
   line-height: 1.6;
 }
 
 .item-text {
   flex: 1;
   font-size: 26rpx;
-  color: #1E3A1E;
+  color: #242522;
   line-height: 1.65;
 }
 
@@ -90,7 +90,7 @@
   display: block;
   margin: 12rpx 0 8rpx;
   font-size: 26rpx;
-  color: #5C7A3A;
+  color: #646660;
   line-height: 1.6;
 }
 
@@ -104,7 +104,7 @@
   width: 36rpx;
   height: 36rpx;
   border-radius: 8rpx;
-  border: 2rpx solid #C4B49A;
+  border: 2rpx solid #C9CBC6;
   box-sizing: border-box;
   margin-right: 16rpx;
   display: flex;
@@ -113,28 +113,28 @@
 }
 
 .check.on {
-  background: #1E3A1E;
-  border-color: #1E3A1E;
+  background: #242522;
+  border-color: #242522;
 }
 
 .check-mark {
   width: 14rpx;
   height: 8rpx;
-  border-left: 3rpx solid #F5EFE0;
-  border-bottom: 3rpx solid #F5EFE0;
+  border-left: 3rpx solid #F7F7F5;
+  border-bottom: 3rpx solid #F7F7F5;
   transform: rotate(-45deg);
   margin-top: -2rpx;
 }
 
 .remember-text {
   font-size: 24rpx;
-  color: #8A7558;
+  color: #70726D;
 }
 
 .agree-btn {
   height: 96rpx;
   border-radius: 32rpx;
-  background: #1E3A1E;
+  background: #242522;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,7 +144,7 @@
 .agree-text {
   font-size: 32rpx;
   font-weight: 600;
-  color: #F5EFE0;
+  color: #F7F7F5;
 }
 
 .cancel {
@@ -156,5 +156,5 @@
 
 .cancel-text {
   font-size: 26rpx;
-  color: #8A7558;
+  color: #70726D;
 }

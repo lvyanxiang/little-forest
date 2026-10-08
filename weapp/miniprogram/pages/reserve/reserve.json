@@ -3,5 +3,5 @@
     "app-header": "/components/app-header/index",
     "calendar-modal": "/components/calendar-modal/index"
   },
-  "backgroundColor": "#FDFAF3"
+  "backgroundColor": "#FFFFFF"
 }

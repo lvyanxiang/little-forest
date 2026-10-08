@@ -6,17 +6,17 @@
   ],
   "window": {
     "navigationStyle": "custom",
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "black",
     "navigationBarTitleText": "小森林书店",
-    "navigationBarBackgroundColor": "#1E3A1E",
-    "backgroundColor": "#FDFAF3",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#FFFFFF",
     "backgroundTextStyle": "dark"
   },
   "tabBar": {
     "custom": true,
-    "color": "#C4B49A",
-    "selectedColor": "#1E3A1E",
-    "backgroundColor": "#FDFAF3",
+    "color": "#C9CBC6",
+    "selectedColor": "#242522",
+    "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
       {

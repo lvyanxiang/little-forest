@@ -12,6 +12,8 @@ export type StorePayload = {
   noticeItems: string[]
   noticeFoot: string
   homeNoticeText: string
+  homeHeroText: string
+  homeHeroImageUrl: string
   successNoticeLines: string[]
   geocodeStatus?: 'updated' | 'unchanged' | 'skipped' | 'failed'
 }
@@ -61,6 +63,18 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(body),
     }),
+  uploadHomeImage: async (file: File) => {
+    const body = new FormData()
+    body.append('image', file)
+    const res = await fetch('/api/admin/store/home-image', { method: 'POST', body })
+    const text = await res.text()
+    const data = text ? JSON.parse(text) : null
+    if (!res.ok) {
+      const message = Array.isArray(data?.message) ? data.message[0] : data?.message
+      throw new Error(message || `上传失败 ${res.status}`)
+    }
+    return data as StorePayload
+  },
   geocodeAddress: (address: string) =>
     request<{ latitude: number; longitude: number }>(
       `/api/admin/store/geocode?address=${encodeURIComponent(address)}`,

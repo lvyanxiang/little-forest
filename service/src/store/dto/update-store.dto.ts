@@ -61,6 +61,10 @@ export class UpdateStoreDto {
   homeNoticeText?: string;
 
   @IsOptional()
+  @IsString()
+  homeHeroText?: string;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   successNoticeLines?: string[];

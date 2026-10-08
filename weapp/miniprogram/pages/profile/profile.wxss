@@ -1,28 +1,29 @@
 .page {
   min-height: 100vh;
-  background: #FDFAF3;
+  background: #FFFFFF;
   box-sizing: border-box;
 }
 
 .user-card {
-  margin: 40rpx 48rpx 40rpx;
-  padding: 40rpx;
-  border-radius: 32rpx;
-  background: #1E3A1E;
+  margin: 24rpx 48rpx 48rpx;
+  padding: 32rpx;
+  border-radius: 28rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E5E6E2;
   display: flex;
   align-items: center;
   gap: 32rpx;
 }
 
 .avatar {
-  width: 112rpx;
-  height: 112rpx;
+  width: 96rpx;
+  height: 96rpx;
   border-radius: 50%;
-  background: #2D5016;
+  background: #F1F1EF;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48rpx;
+  font-size: 42rpx;
   flex-shrink: 0;
 }
 
@@ -35,30 +36,32 @@
   display: block;
   font-size: 32rpx;
   font-weight: 600;
-  color: #F5EFE0;
+  color: #242522;
 }
 
 .user-phone {
   display: block;
   margin-top: 6rpx;
   font-size: 24rpx;
-  color: #8FAF6B;
+  color: #70726D;
 }
 
 .user-count {
   text-align: right;
+  padding-left: 28rpx;
+  border-left: 1rpx solid #E5E6E2;
 }
 
 .count-num {
   display: block;
   font-size: 48rpx;
   font-weight: 600;
-  color: #F5EFE0;
+  color: #242522;
 }
 
 .count-label {
   font-size: 24rpx;
-  color: #8FAF6B;
+  color: #70726D;
 }
 
 .section {
@@ -69,15 +72,15 @@
   display: block;
   font-size: 32rpx;
   font-weight: 600;
-  color: #1E3A1E;
+  color: #242522;
   margin-bottom: 24rpx;
 }
 
 .empty {
   border-radius: 32rpx;
   padding: 80rpx 0;
-  background: #F5EFE0;
-  border: 1rpx dashed #C4B49A;
+  background: #F7F7F5;
+  border: 1rpx dashed #C9CBC6;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -94,7 +97,7 @@
 
 .empty-text {
   font-size: 28rpx;
-  color: #8A7558;
+  color: #70726D;
 }
 
 .up-list {
@@ -104,8 +107,8 @@
 }
 
 .up-card {
-  background: #F5EFE0;
-  border: 1rpx solid #C4B49A;
+  background: #F7F7F5;
+  border: 1rpx solid #C9CBC6;
   border-radius: 32rpx;
   padding: 32rpx;
 }
@@ -128,41 +131,41 @@
   width: 12rpx;
   height: 12rpx;
   border-radius: 50%;
-  background: #5C7A3A;
+  background: #646660;
 }
 
 .status {
   font-size: 24rpx;
   font-weight: 500;
-  color: #5C7A3A;
+  color: #646660;
 }
 
 .up-date {
   display: block;
   font-size: 32rpx;
   font-weight: 600;
-  color: #1E3A1E;
+  color: #242522;
 }
 
 .up-slot {
   display: block;
   margin-top: 6rpx;
   font-size: 28rpx;
-  color: #8A7558;
+  color: #70726D;
 }
 
 .cancel-btn {
   font-size: 24rpx;
-  color: #8A7558;
-  border: 1rpx solid #D8CFC4;
-  background: #FDFAF3;
+  color: #70726D;
+  border: 1rpx solid #E5E6E2;
+  background: #FFFFFF;
   border-radius: 24rpx;
   padding: 12rpx 24rpx;
 }
 
 .up-foot {
   padding-top: 24rpx;
-  border-top: 1rpx solid #D8CFC4;
+  border-top: 1rpx solid #E5E6E2;
   display: flex;
   gap: 64rpx;
 }
@@ -170,13 +173,13 @@
 .meta-k {
   display: block;
   font-size: 20rpx;
-  color: #8A7558;
+  color: #70726D;
   margin-bottom: 4rpx;
 }
 
 .meta-v {
   font-size: 24rpx;
-  color: #1E3A1E;
+  color: #242522;
 }
 
 .past-list {
@@ -186,8 +189,8 @@
 }
 
 .past-card {
-  background: #F5EFE0;
-  border: 1rpx solid #D8CFC4;
+  background: #F7F7F5;
+  border: 1rpx solid #E5E6E2;
   border-radius: 24rpx;
   padding: 32rpx;
   display: flex;
@@ -200,20 +203,20 @@
   display: block;
   font-size: 28rpx;
   font-weight: 500;
-  color: #8A7558;
+  color: #70726D;
 }
 
 .past-slot {
   display: block;
   margin-top: 6rpx;
   font-size: 24rpx;
-  color: #C4B49A;
+  color: #C9CBC6;
 }
 
 .past-tag {
   font-size: 24rpx;
-  color: #8A7558;
-  background: #D8CFC4;
+  color: #70726D;
+  background: #E5E6E2;
   border-radius: 999rpx;
   padding: 8rpx 20rpx;
 }
@@ -225,7 +228,7 @@
   bottom: 0;
   left: 0;
   z-index: 200;
-  background: rgba(30, 58, 30, 0.4);
+  background: rgba(20, 20, 20, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -234,7 +237,7 @@
 
 .dialog {
   width: 100%;
-  background: #FDFAF3;
+  background: #FFFFFF;
   border-radius: 48rpx;
   padding: 48rpx;
   box-sizing: border-box;
@@ -245,7 +248,7 @@
   text-align: center;
   font-size: 36rpx;
   font-weight: 600;
-  color: #1E3A1E;
+  color: #242522;
   margin-bottom: 16rpx;
 }
 
@@ -253,7 +256,7 @@
   display: block;
   text-align: center;
   font-size: 28rpx;
-  color: #8A7558;
+  color: #70726D;
   margin-bottom: 48rpx;
 }
 
@@ -274,12 +277,12 @@
 }
 
 .dialog-btn.ghost {
-  background: #F5EFE0;
-  border: 1rpx solid #C4B49A;
-  color: #1E3A1E;
+  background: #F7F7F5;
+  border: 1rpx solid #C9CBC6;
+  color: #242522;
 }
 
 .dialog-btn.solid {
-  background: #1E3A1E;
-  color: #F5EFE0;
+  background: #242522;
+  color: #F7F7F5;
 }

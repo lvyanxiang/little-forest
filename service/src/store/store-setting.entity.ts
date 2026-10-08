@@ -38,6 +38,12 @@ export class StoreSetting {
   @Column('text')
   homeNoticeText: string;
 
+  @Column('text', { default: '讀著書\n一輩子很快就過去了\n去讀書吧\n讀一句\n便經歷一句' })
+  homeHeroText: string;
+
+  @Column('text', { nullable: true, select: false })
+  homeHeroImage: string | null;
+
   @Column('simple-json')
   successNoticeLines: string[];
 }

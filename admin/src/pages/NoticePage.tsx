@@ -5,7 +5,6 @@ export function NoticePage() {
   const [noticeHeading, setNoticeHeading] = useState('')
   const [noticeItems, setNoticeItems] = useState('')
   const [noticeFoot, setNoticeFoot] = useState('')
-  const [homeNoticeText, setHomeNoticeText] = useState('')
   const [successNoticeLines, setSuccessNoticeLines] = useState('')
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
@@ -17,7 +16,6 @@ export function NoticePage() {
         setNoticeHeading(store.noticeHeading)
         setNoticeItems(store.noticeItems.join('\n'))
         setNoticeFoot(store.noticeFoot)
-        setHomeNoticeText(store.homeNoticeText)
         setSuccessNoticeLines(store.successNoticeLines.join('\n'))
       })
       .catch((err: Error) => setMessage(err.message))
@@ -31,7 +29,6 @@ export function NoticePage() {
         noticeHeading,
         noticeItems: noticeItems.split('\n').map((item) => item.trim()).filter(Boolean),
         noticeFoot,
-        homeNoticeText,
         successNoticeLines: successNoticeLines
           .split('\n')
           .map((item) => item.trim())
@@ -48,17 +45,9 @@ export function NoticePage() {
   return (
     <div className="w-full max-w-3xl">
       <p className="mb-6 mt-0 text-sm leading-6 text-bark md:text-base">
-        首页到店说明、预约页须知和预约成功提示都从这里读。每行一条。
+        小程序首次进入时的到店须知、预约页须知和预约成功提示都从这里读取。列表内容每行一条。
       </p>
       <div className="grid gap-4">
-        <label className="grid gap-1.5">
-          <span className="text-sm text-bark">首页到店说明</span>
-          <textarea
-            className="min-h-[88px] w-full rounded-lg border border-line bg-white px-3 py-2"
-            value={homeNoticeText}
-            onChange={(e) => setHomeNoticeText(e.target.value)}
-          />
-        </label>
         <label className="grid gap-1.5">
           <span className="text-sm text-bark">预约页标题</span>
           <input

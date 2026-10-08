@@ -1,16 +1,16 @@
 page {
-  --forest-deep: #1E3A1E;
-  --forest: #2D5016;
-  --moss: #5C7A3A;
-  --sage: #8FAF6B;
-  --cream: #F5EFE0;
-  --cream-dark: #EDE4CE;
-  --bark: #8A7558;
-  --bark-light: #C4B49A;
-  --paper: #FDFAF3;
-  --border: #D8CFC4;
-  background-color: #FDFAF3;
-  color: #1E3A1E;
+  --forest-deep: #242522;
+  --forest: #3A3B38;
+  --moss: #646660;
+  --sage: #B8BAB5;
+  --cream: #F7F7F5;
+  --cream-dark: #EFEFEC;
+  --bark: #70726D;
+  --bark-light: #C9CBC6;
+  --paper: #FFFFFF;
+  --border: #E5E6E2;
+  background-color: #FFFFFF;
+  color: #242522;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 

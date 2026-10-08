@@ -59,12 +59,12 @@ function decorateSlots(slots: ApiSlot[], selectedSlot: number | null, closed: bo
     const fillPct = slot.max > 0 ? Math.max(0, Math.min(100, (booked / slot.max) * 100)) : 0
     const isSel = !closed && !isPast && selectedSlot === slot.id
     const barColor = isFull
-      ? '#8A7558'
+      ? '#70726D'
       : fillPct >= 80
         ? '#B87C4C'
         : fillPct >= 50
           ? '#C4A44C'
-          : '#8A7558'
+          : '#70726D'
     const statusLabel = closed
       ? '该日闭馆'
       : isPast
@@ -74,7 +74,7 @@ function decorateSlots(slots: ApiSlot[], selectedSlot: number | null, closed: bo
           : avail <= 2
             ? `仅剩 ${avail} 个名额`
             : `剩余 ${avail} 个名额`
-    const statusColor = isFull || closed ? '#8A7558' : avail <= 2 ? '#B87C4C' : '#8A7558'
+    const statusColor = isFull || closed ? '#70726D' : avail <= 2 ? '#B87C4C' : '#70726D'
     return {
       id: slot.id,
       label: slot.label,
@@ -88,10 +88,10 @@ function decorateSlots(slots: ApiSlot[], selectedSlot: number | null, closed: bo
       barColor,
       statusLabel,
       statusColor,
-      cardBg: isSel ? '#EDE4CE' : isFull ? '#F0EBE0' : '#F5EFE0',
-      cardBorder: isSel ? '#5C7A3A' : isFull ? '#D8CFC4' : '#C4B49A',
-      timeColor: isFull ? '#8A7558' : '#1E3A1E',
-      muted: '#8A7558',
+      cardBg: isSel ? '#EFEFEC' : isFull ? '#F1F1EF' : '#F7F7F5',
+      cardBorder: isSel ? '#646660' : isFull ? '#E5E6E2' : '#C9CBC6',
+      timeColor: isFull ? '#70726D' : '#242522',
+      muted: '#70726D',
       showShimmer: fillPct >= 70 && !isFull && !closed,
     }
   })
