@@ -1,15 +1,15 @@
 <view class="page">
-  <view class="canvas">
+  <view class="canvas {{showEntryNotice ? 'is-blurred' : ''}}">
     <image class="hero-image" src="{{heroImage}}" mode="aspectFill" />
-    <view class="wash wash-center"></view>
+    <view class="brand-mark">
+      <text class="brand-placeholder">LOGO</text>
+    </view>
     <view class="copy serif">
       <text wx:for="{{heroLines}}" wx:key="index" class="copy-line">{{item}}</text>
     </view>
 
     <view class="reserve" bindtap="onReserve">
-      <text class="reserve-small">RESERVATION</text>
       <text class="reserve-text serif">立即预约</text>
-      <view class="reserve-line"></view>
     </view>
   </view>
 

@@ -1,29 +1,29 @@
 <view wx:if="{{show}}" class="mask" catchtouchmove="noop">
-  <view class="sheet" catchtap="noop">
-    <view class="handle-wrap">
-      <view class="handle"></view>
-    </view>
-    <text class="title serif">{{title}}</text>
-    <text wx:if="{{intro}}" class="intro">{{intro}}</text>
-    <scroll-view class="body" scroll-y enhanced show-scrollbar="{{false}}">
-      <text class="heading serif">{{heading || '小森林庇护所注意事项'}}</text>
-      <view wx:for="{{items.length ? items : fallbackItems}}" wx:key="*this" class="item">
-        <text class="num">{{index + 1}}</text>
-        <text class="item-text">{{item}}</text>
+  <view class="modal" catchtap="noop">
+    <view class="glass-tint"></view>
+    <view class="modal-content">
+      <text class="title serif">{{title}}</text>
+      <text wx:if="{{intro}}" class="intro">{{intro}}</text>
+      <scroll-view class="body" scroll-y enhanced show-scrollbar="{{false}}">
+        <text class="heading serif">{{heading || '小森林庇护所注意事项'}}</text>
+        <view wx:for="{{items.length ? items : fallbackItems}}" wx:key="*this" class="item">
+          <text class="num">{{index + 1}}</text>
+          <text class="item-text">{{item}}</text>
+        </view>
+        <text class="foot">{{foot || '请和我们一样，爱护爱惜这个空间。谢谢。'}}</text>
+      </scroll-view>
+      <view wx:if="{{showRemember}}" class="remember" bindtap="onToggleRemember">
+        <view class="check {{remember ? 'on' : ''}}">
+          <view wx:if="{{remember}}" class="check-mark"></view>
+        </view>
+        <text class="remember-text">记住选择，下次预约自动同意</text>
       </view>
-      <text class="foot">{{foot || '请和我们一样，爱护爱惜这个空间。谢谢。'}}</text>
-    </scroll-view>
-    <view wx:if="{{showRemember}}" class="remember" bindtap="onToggleRemember">
-      <view class="check {{remember ? 'on' : ''}}">
-        <view wx:if="{{remember}}" class="check-mark"></view>
+      <view class="agree-btn" hover-class="agree-btn-active" hover-stay-time="80" bindtap="onAgree">
+        <text class="agree-text serif">{{confirmText}}</text>
       </view>
-      <text class="remember-text">记住选择，下次预约自动同意</text>
-    </view>
-    <view class="agree-btn" bindtap="onAgree">
-      <text class="agree-text serif">{{confirmText}}</text>
-    </view>
-    <view wx:if="{{showCancel}}" class="cancel" bindtap="onClose">
-      <text class="cancel-text">取消</text>
+      <view wx:if="{{showCancel}}" class="cancel" bindtap="onClose">
+        <text class="cancel-text">取消</text>
+      </view>
     </view>
   </view>
 </view>

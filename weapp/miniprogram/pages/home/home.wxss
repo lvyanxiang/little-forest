@@ -11,6 +11,12 @@
   height: 100%;
   overflow: hidden;
   background: #ffffff;
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.canvas.is-blurred {
+  filter: blur(22rpx) saturate(0.9) brightness(0.96);
+  transform: scale(1.04);
 }
 
 .hero-image {
@@ -23,72 +29,68 @@
   display: block;
 }
 
-.wash {
+.brand-mark {
   position: absolute;
-  pointer-events: none;
+  top: 280rpx;
+  right: 56rpx;
+  width: 120rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.76);
 }
 
-.wash-center {
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 42%;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.1) 55%, rgba(255, 255, 255, 0.26));
+.brand-placeholder {
+  font-size: 28rpx;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #242522;
 }
 
 .copy {
   position: absolute;
-  top: 230rpx;
-  right: 48rpx;
+  top: 400rpx;
+  right: 56rpx;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  color: #20211f;
+  color: #5f615c;
 }
 
 .copy-line {
   display: block;
-  font-size: 34rpx;
-  line-height: 1.9;
-  letter-spacing: 0.06em;
+  font-size: 24rpx;
+  line-height: 2;
+  letter-spacing: 0.04em;
   text-align: right;
-  text-shadow: 0 1rpx 10rpx rgba(255, 255, 255, 0.58);
+  text-shadow: none;
 }
 
 .reserve {
   position: absolute;
-  right: 48rpx;
-  bottom: calc(140rpx + env(safe-area-inset-bottom));
-  min-width: 220rpx;
-  padding: 24rpx 30rpx 22rpx;
+  right: 56rpx;
+  bottom: calc(190rpx + env(safe-area-inset-bottom));
+  width: 280rpx;
+  height: 80rpx;
   border: 1rpx solid rgba(52, 57, 48, 0.62);
-  background: rgba(247, 245, 239, 0.76);
-  backdrop-filter: blur(10rpx);
+  background: rgba(255, 255, 255, 0.58);
+  -webkit-backdrop-filter: blur(24rpx) saturate(150%);
+  backdrop-filter: blur(24rpx) saturate(150%);
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.78), 0 10rpx 30rpx rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .reserve:active {
   opacity: 0.72;
 }
 
-.reserve-small {
-  display: block;
-  margin-bottom: 6rpx;
-  font-size: 15rpx;
-  letter-spacing: 0.16em;
-  color: #77796f;
-}
-
 .reserve-text {
   display: block;
-  font-size: 31rpx;
-  letter-spacing: 0.12em;
+  font-size: 28rpx;
+  letter-spacing: 0.22em;
   color: #292e27;
-}
-
-.reserve-line {
-  width: 52rpx;
-  height: 2rpx;
-  margin-top: 14rpx;
-  background: #343930;
 }

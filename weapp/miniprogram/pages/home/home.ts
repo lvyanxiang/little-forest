@@ -1,5 +1,6 @@
 import { fetchMyBookings } from '../../utils/booking'
-import { FALLBACK_STORE, fetchStore, type StoreInfo } from '../../utils/store'
+import { FALLBACK_STORE, fetchStore } from '../../utils/store'
+import type { StoreInfo } from '../../utils/store'
 import { syncTabBar } from '../../utils/tab'
 
 Page({
@@ -13,9 +14,9 @@ Page({
     this.loadStore()
   },
   onShow() {
-    syncTabBar(this, 0, this.data.showEntryNotice)
+    syncTabBar(this, 0, false)
     fetchMyBookings()
-      .then(() => syncTabBar(this, 0, this.data.showEntryNotice))
+      .then(() => syncTabBar(this, 0, false))
       .catch(() => {})
   },
   async loadStore() {
