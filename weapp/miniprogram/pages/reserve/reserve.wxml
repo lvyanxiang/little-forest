@@ -107,6 +107,8 @@
       <input class="input" type="number" maxlength="11" value="{{phone}}" placeholder="请输入您的手机号" placeholder-class="ph" bindinput="onPhoneInput" />
     </view>
     <view class="notice">
+      <text class="notice-foot">微信账号用于同步预约，姓名和手机号用于到店联系。</text>
+      <text class="notice-foot" bindtap="onOpenPrivacy">查看《用户隐私保护指引》</text>
       <text class="notice-title serif">到店须知</text>
       <text class="notice-heading">{{noticeHeading}}</text>
       <view wx:for="{{noticeItems}}" wx:key="*this" class="notice-row">

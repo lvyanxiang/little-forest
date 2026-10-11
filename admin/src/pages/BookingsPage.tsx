@@ -60,7 +60,7 @@ export function BookingsPage() {
               </div>
               <p className="m-0 text-bark">{row.slotLabel}</p>
               <p className="mt-2 mb-0">
-                {row.name} · {row.phone} · {row.people} 人
+                {row.name} · {row.phone}
               </p>
             </article>
           ))
@@ -74,7 +74,6 @@ export function BookingsPage() {
               <th className="px-4 py-3 font-medium">时段快照</th>
               <th className="px-4 py-3 font-medium">姓名</th>
               <th className="px-4 py-3 font-medium">手机</th>
-              <th className="px-4 py-3 font-medium">人数</th>
               <th className="px-4 py-3 font-medium">状态</th>
             </tr>
           </thead>
@@ -85,13 +84,12 @@ export function BookingsPage() {
                 <td className="px-4 py-3">{row.slotLabel}</td>
                 <td className="px-4 py-3">{row.name}</td>
                 <td className="px-4 py-3">{row.phone}</td>
-                <td className="px-4 py-3">{row.people}</td>
                 <td className="px-4 py-3">{row.status === 'cancelled' ? '已取消' : '已确认'}</td>
               </tr>
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-8 text-center text-bark" colSpan={6}>
+                <td className="px-4 py-8 text-center text-bark" colSpan={5}>
                   暂无预约
                 </td>
               </tr>

@@ -1,14 +1,21 @@
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { formatPhoneDisplay } from '../common/time';
-import { GeocodeService } from './geocode.service';
 import { StoreSetting } from './store-setting.entity';
+import type { UpdateStoreDto } from './dto/update-store.dto';
 
-export type StorePayload = Omit<StoreSetting, 'homeHeroImage'> & {
-  phoneDisplay: string;
+export type StorePayload = Pick<
+  StoreSetting,
+  | 'id'
+  | 'address'
+  | 'closedWeekdays'
+  | 'noticeHeading'
+  | 'noticeItems'
+  | 'noticeFoot'
+  | 'homeHeroText'
+  | 'successNoticeLines'
+> & {
   homeHeroImageUrl: string;
-  geocodeStatus?: 'updated' | 'unchanged' | 'skipped' | 'failed';
 };
 
 export type HomeHeroUpload = {
@@ -53,7 +60,6 @@ export class StoreService implements OnModuleInit {
   constructor(
     @InjectRepository(StoreSetting)
     private readonly repo: Repository<StoreSetting>,
-    private readonly geocode: GeocodeService,
   ) {}
 
   async onModuleInit() {
@@ -78,11 +84,19 @@ export class StoreService implements OnModuleInit {
     });
   }
 
-  private toPayload(store: StoreSetting, extra: Partial<StorePayload> = {}): StorePayload {
-    const { homeHeroImage: _image, ...safeStore } = store;
+  private toPayload(
+    store: StoreSetting,
+    extra: Partial<StorePayload> = {},
+  ): StorePayload {
     return {
-      ...safeStore,
-      phoneDisplay: formatPhoneDisplay(store.phone),
+      id: store.id,
+      address: store.address,
+      closedWeekdays: store.closedWeekdays,
+      noticeHeading: store.noticeHeading,
+      noticeItems: store.noticeItems,
+      noticeFoot: store.noticeFoot,
+      homeHeroText: store.homeHeroText,
+      successNoticeLines: store.successNoticeLines,
       homeHeroImageUrl: store.homeHeroImage ? '/api/store/home-image' : '',
       ...extra,
     };
@@ -111,35 +125,7 @@ export class StoreService implements OnModuleInit {
     return this.toPayload(await this.repo.save(target));
   }
 
-  async lookupAddress(address: string) {
-    const geo = await this.geocode.fromAddress(address);
-    if (geo.ok === false) {
-      if (geo.reason === 'no_key') {
-        throw new BadRequestException('未配置 TENCENT_MAP_KEY，无法根据地址定位');
-      }
-      if (geo.reason === 'quota') {
-        throw new BadRequestException('腾讯地图今日调用次数已用完，请明天再试或去控制台提高配额');
-      }
-      throw new BadRequestException('没有解析到这个地址，可在地图上点选位置');
-    }
-    return { latitude: geo.latitude, longitude: geo.longitude };
-  }
-
-  async lookupCoords(latitude: number, longitude: number) {
-    const geo = await this.geocode.fromCoords(latitude, longitude);
-    if (geo.ok === false) {
-      if (geo.reason === 'no_key') {
-        throw new BadRequestException('未配置 TENCENT_MAP_KEY，无法根据地图反查地址');
-      }
-      if (geo.reason === 'quota') {
-        throw new BadRequestException('腾讯地图今日调用次数已用完，请明天再试或去控制台提高配额');
-      }
-      throw new BadRequestException('没有解析到这个位置的地址');
-    }
-    return { address: geo.address };
-  }
-
-  async update(payload: Partial<Omit<StoreSetting, 'id'>>): Promise<StorePayload> {
+  async update(payload: UpdateStoreDto): Promise<StorePayload> {
     const store = await this.ensureDefault();
     if (payload.closedWeekdays) {
       payload.closedWeekdays = [...new Set(payload.closedWeekdays)]
@@ -148,35 +134,22 @@ export class StoreService implements OnModuleInit {
         .sort((a, b) => a - b);
     }
     if (payload.noticeItems) {
-      payload.noticeItems = payload.noticeItems.map((item) => item.trim()).filter(Boolean);
+      payload.noticeItems = payload.noticeItems
+        .map((item) => item.trim())
+        .filter(Boolean);
     }
     if (payload.successNoticeLines) {
       payload.successNoticeLines = payload.successNoticeLines
         .map((item) => item.trim())
         .filter(Boolean);
     }
-    const nextAddress = payload.address?.trim();
-    const hasCoords =
-      typeof payload.latitude === 'number' && typeof payload.longitude === 'number';
-    const addressChanged = Boolean(nextAddress && nextAddress !== store.address);
-    let geocodeStatus: StorePayload['geocodeStatus'] = 'unchanged';
-
-    if (!hasCoords && addressChanged && nextAddress) {
-      const geo = await this.geocode.fromAddress(nextAddress);
-      if (geo.ok === false) {
-        geocodeStatus = geo.reason === 'no_key' ? 'skipped' : 'failed';
-      } else {
-        payload.latitude = geo.latitude;
-        payload.longitude = geo.longitude;
-        geocodeStatus = 'updated';
-      }
-    }
-
     Object.assign(
       store,
-      Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined)),
+      Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined),
+      ),
     );
     const saved = await this.repo.save(store);
-    return this.toPayload(saved, { geocodeStatus });
+    return this.toPayload(saved);
   }
 }

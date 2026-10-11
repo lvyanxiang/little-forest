@@ -9,9 +9,8 @@ const WEEKDAYS = [
 ]
 
 const EMPTY: StorePayload = {
-  id: 1, name: '', address: '', latitude: 31.22048, longitude: 121.42516,
-  phone: '', phoneDisplay: '', hours: '', closedWeekdays: [], noticeHeading: '',
-  noticeItems: [], noticeFoot: '', homeNoticeText: '', homeHeroText: '',
+  id: 1, address: '', closedWeekdays: [], noticeHeading: '',
+  noticeItems: [], noticeFoot: '', homeHeroText: '',
   homeHeroImageUrl: '', successNoticeLines: [],
 }
 
@@ -39,16 +38,11 @@ export function StorePage() {
     setMessage('')
     try {
       const saved = await api.saveStore({
-        name: form.name,
         address: form.address,
-        latitude: Number(form.latitude),
-        longitude: Number(form.longitude),
-        phone: form.phone,
-        hours: form.hours,
         closedWeekdays: form.closedWeekdays,
       })
       setForm(saved)
-      setMessage('门店信息已保存')
+      setMessage('预约设置已保存')
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '保存失败')
     } finally {
@@ -58,18 +52,11 @@ export function StorePage() {
 
   return (
     <div className="w-full max-w-3xl">
+      <p className="mb-6 mt-0 text-sm leading-6 text-bark">地址显示在预约成功页；闭馆星期用于预约页的日期选择。</p>
       <div className="grid gap-4">
         <label className="grid gap-1.5">
-          <span className="text-sm text-bark">店名</span>
-          <input className="rounded-lg border border-line bg-white px-3 py-2" value={form.name} onChange={(event) => patch('name', event.target.value)} />
-        </label>
-        <label className="grid gap-1.5">
-          <span className="text-sm text-bark">电话</span>
-          <input className="rounded-lg border border-line bg-white px-3 py-2" value={form.phone} onChange={(event) => patch('phone', event.target.value)} />
-        </label>
-        <label className="grid gap-1.5">
-          <span className="text-sm text-bark">营业时间文案</span>
-          <input className="rounded-lg border border-line bg-white px-3 py-2" value={form.hours} onChange={(event) => patch('hours', event.target.value)} />
+          <span className="text-sm text-bark">到店地址</span>
+          <textarea className="min-h-[90px] rounded-lg border border-line bg-white px-3 py-2" value={form.address} onChange={(event) => patch('address', event.target.value)} />
         </label>
         <div className="grid gap-2">
           <span className="text-sm text-bark">闭馆星期</span>
@@ -84,7 +71,7 @@ export function StorePage() {
       </div>
       <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
         <button type="button" className="rounded-[10px] bg-forest px-4 py-2 text-cream disabled:opacity-60" onClick={onSave} disabled={saving}>
-          {saving ? '保存中…' : '保存门店信息'}
+          {saving ? '保存中…' : '保存预约设置'}
         </button>
         <span className={message.includes('已保存') ? 'text-moss' : 'text-[#B87C4C]'}>{message}</span>
       </div>

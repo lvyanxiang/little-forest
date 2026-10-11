@@ -16,6 +16,10 @@ export class Booking {
   @Column()
   clientId: string;
 
+  @Index('IDX_bookings_user_id')
+  @Column('uuid', { nullable: true })
+  userId: string | null;
+
   @Column({ length: 10 })
   visitDate: string;
 

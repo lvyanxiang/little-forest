@@ -7,6 +7,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { SlotsModule } from './slots/slots.module';
 import { StoreModule } from './store/store.module';
 import { AuthModule } from './auth/auth.module';
+import { WechatModule } from './wechat/wechat.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AuthModule } from './auth/auth.module';
       }),
     }),
     AuthModule,
+    WechatModule,
     StoreModule,
     SlotsModule,
     BookingsModule,

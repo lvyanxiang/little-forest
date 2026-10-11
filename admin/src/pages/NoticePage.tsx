@@ -49,7 +49,7 @@ export function NoticePage() {
       </p>
       <div className="grid gap-4">
         <label className="grid gap-1.5">
-          <span className="text-sm text-bark">预约页标题</span>
+          <span className="text-sm text-bark">须知标题（首页弹窗与预约页共用）</span>
           <input
             className="w-full rounded-lg border border-line bg-white px-3 py-2"
             value={noticeHeading}

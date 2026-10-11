@@ -9,7 +9,7 @@ little-forest/
 ├── admin/
 │   ├── Dockerfile          # 在 admin 内 npm ci / build，Nginx 提供静态文件
 │   ├── .dockerignore
-│   └── nginx.conf          # /api/ 转发到 service:3001
+│   └── nginx.conf          # /api/ 转发到 service:3000
 ├── service/
 │   ├── Dockerfile          # 在 service 内 npm ci / build，Node 运行产物
 │   ├── .dockerignore
@@ -23,8 +23,8 @@ little-forest/
 Compose 只创建 `admin` 和 `service`。PostgreSQL 由 1Panel 管理，不重复创建，也不管理数据库的数据卷。
 
 ```text
-后台域名 → 反向代理 → admin:80 → /api/* → service:3001 → PostgreSQL:5432
-小程序 API 域名 → 反向代理 → service:3001
+后台域名 → 反向代理 → admin:8080 → /api/* → service:3000 → PostgreSQL:5432
+小程序 API 域名 → 反向代理 → service:3000
 ```
 
 `admin` 与 `service` 通过本项目的 `app` 网络通信。只有 `service` 加入已有的数据库网络，并获取数据库凭证。图片现在保存在数据库字段中，不需要额外挂载上传目录。后端时区固定为 `Asia/Shanghai`，用于预约日期和时段判断。
@@ -65,7 +65,6 @@ DB_PORT=5432
 DB_USERNAME=little_forest
 DB_PASSWORD='实际密码'
 DB_NAME=little_forest
-TENCENT_MAP_KEY=腾讯地图密钥
 ```
 
 数据库和用户须先在 1Panel 创建；该用户需要本业务数据库的建表、建索引、修改表和读写权限。初始化脚本使用 PostgreSQL 13+ 内置的 `gen_random_uuid()`。
@@ -102,7 +101,7 @@ docker compose --env-file .env.production logs --tail=100 service admin
 ```bash
 curl -f http://127.0.0.1:8080/
 curl -f http://127.0.0.1:8080/api/health
-curl -f http://127.0.0.1:3001/api/health
+curl -f http://127.0.0.1:3000/api/health
 ```
 
 ## 4. 1Panel 配置与反向代理
@@ -117,7 +116,7 @@ docker compose --env-file .env.production up -d --force-recreate service
 
 如果面板不支持为现有路径加载环境文件，使用上面的 SSH 命令部署，1Panel 仍可查看容器和日志；编排编辑和启停能力取决于其创建来源和面板版本。
 
-默认端口绑定宿主机 `127.0.0.1`：后台 `8080`，后端 `3001`。宿主机运行的反向代理，或使用 host 网络的 OpenResty，可将后台域名代理到 `http://127.0.0.1:8080`，将小程序 API 域名代理到 `http://127.0.0.1:3001`。后台 Nginx 会保留 `/api/` 前缀转发到后端，小程序 API 代理也应保留该前缀。
+默认端口绑定宿主机 `127.0.0.1`：后台 `8080`，后端 `3000`。后台容器内 Nginx 也监听 `8080`，默认映射为 `8080:8080`；`.env.production` 中的 `ADMIN_PORT` 只调整宿主机端口。宿主机运行的反向代理，或使用 host 网络的 OpenResty，可将后台域名代理到 `http://127.0.0.1:8080`，将小程序 API 域名代理到 `http://127.0.0.1:3000`。后台 Nginx 会保留 `/api/` 前缀转发到后端，小程序 API 代理也应保留该前缀。
 
 若 OpenResty 在独立的 bridge 网络容器中，`127.0.0.1` 指向 OpenResty 自身。需要将代理与目标容器接入同一网络，通过容器 DNS 访问。例如在仓库根目录创建 `compose.proxy.yaml`：
 
@@ -148,7 +147,7 @@ networks:
 docker compose --env-file .env.production -f compose.yaml -f compose.proxy.yaml up -d
 ```
 
-此时代理目标分别为 `http://little-forest-admin:80` 和 `http://little-forest-api:3001`。不用为了容器间通信开放公网端口。外层反向代理的上传大小也应设置为至少 `6m`，否则 5 MiB 图片上传可能被拒绝。
+此时代理目标分别为 `http://little-forest-admin:8080` 和 `http://little-forest-api:3000`。不用为了容器间通信开放公网端口。外层反向代理的上传大小也应设置为至少 `6m`，否则 5 MiB 图片上传可能被拒绝。
 
 后台现在需要登录，门店设置、图片上传、时段管理和预约记录接口均由后端验证登录会话。小程序公开接口及健康检查不要求后台登录。
 
@@ -184,9 +183,11 @@ docker build -t little-forest-admin:local ./admin
 docker build -t little-forest-service:local ./service
 ```
 
-后台 Docker 镜像的 `/api/` 默认指向 `service:3001`；单独运行后台容器时，仍需在共同网络提供这个后端 DNS 名称，或修改 Nginx 配置。
+后台 Docker 镜像的 `/api/` 默认指向 `service:3000`；单独运行后台容器时，仍需在共同网络提供这个后端 DNS 名称，并将后端 PORT 配置为 3000，或修改 Nginx 配置。
 
 ## 参考
+
+微信用户登录、AppSecret、合法域名、隐私指引和小程序发布操作见 [WECHAT_SETUP.md](./WECHAT_SETUP.md)。
 
 - [Docker Compose 环境变量加载](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/)
 - [Docker Compose 外部网络](https://docs.docker.com/compose/how-tos/networking/)

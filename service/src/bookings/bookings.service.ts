@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { formatSlotLabel, isSlotPast, todayKey, weekdayOf } from '../common/time';
+import {
+  formatSlotLabel,
+  isSlotPast,
+  todayKey,
+  weekdayOf,
+} from '../common/time';
 import { SlotsService } from '../slots/slots.service';
 import { TimeSlot } from '../slots/time-slot.entity';
 import { StoreService } from '../store/store.service';
@@ -24,7 +29,7 @@ export class BookingsService {
     private readonly slotsService: SlotsService,
   ) {}
 
-  async create(dto: CreateBookingDto) {
+  async create(dto: CreateBookingDto, userId: string) {
     if (dto.visitDate < todayKey()) {
       throw new BadRequestException('不能预约过去的日期');
     }
@@ -44,7 +49,8 @@ export class BookingsService {
       throw new BadRequestException('该时段名额不足');
     }
     const entity = this.bookings.create({
-      clientId: dto.clientId,
+      clientId: `wx:${userId}`,
+      userId,
       visitDate: dto.visitDate,
       slotId: slot.id,
       slotLabel: formatSlotLabel(slot.startTime, slot.endTime),
@@ -58,9 +64,9 @@ export class BookingsService {
     return this.toPublic(await this.bookings.save(entity));
   }
 
-  async mine(clientId: string) {
+  async mine(userId: string) {
     const rows = await this.bookings.find({
-      where: { clientId },
+      where: { userId },
       order: { visitDate: 'DESC', createdAt: 'DESC' },
     });
     return rows.map((row) => this.toPublic(row));
@@ -75,10 +81,10 @@ export class BookingsService {
     return rows.map((row) => this.toPublic(row));
   }
 
-  async cancel(id: string, clientId: string) {
+  async cancel(id: string, userId: string) {
     const booking = await this.bookings.findOne({ where: { id } });
     if (!booking) throw new NotFoundException('预约不存在');
-    if (booking.clientId !== clientId) {
+    if (booking.userId !== userId) {
       throw new ForbiddenException('无权取消该预约');
     }
     if (booking.status === 'cancelled') {

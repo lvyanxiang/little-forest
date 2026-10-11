@@ -1,4 +1,5 @@
-import { getClientId } from './client'
+import { ensureWechatLogin } from './auth'
+import { getSession } from './session'
 import { fromDateKey, startOfToday } from './date'
 import { request } from './request'
 
@@ -66,9 +67,15 @@ export async function fetchSlots(date: string) {
 }
 
 export async function fetchMyBookings() {
-  const rows = await request<ApiBooking[]>(`/bookings?clientId=${encodeURIComponent(getClientId())}`)
-  cachedBookings = rows.map(toBooking)
-  return cachedBookings
+  if (!getSession()) { cachedBookings = []; return cachedBookings }
+  try {
+    const rows = await request<ApiBooking[]>('/bookings', 'GET', undefined, true)
+    cachedBookings = rows.map(toBooking)
+    return cachedBookings
+  } catch (error) {
+    cachedBookings = []
+    throw error
+  }
 }
 
 export async function createBooking(input: {
@@ -78,37 +85,36 @@ export async function createBooking(input: {
   phone: string
   people?: number
 }) {
+  await ensureWechatLogin()
   const row = await request<ApiBooking>('/bookings', 'POST', {
-    clientId: getClientId(),
     visitDate: input.visitDate,
     slotId: input.slotId,
     name: input.name,
     phone: input.phone,
     people: input.people ?? 1,
-  })
+  }, true)
   const booking = toBooking(row)
   cachedBookings = [booking, ...cachedBookings.filter((item) => item.id !== booking.id)]
   return booking
 }
 
 export async function cancelBooking(id: string) {
-  const row = await request<ApiBooking>(`/bookings/${id}/cancel`, 'POST', {
-    clientId: getClientId(),
-  })
+  const row = await request<ApiBooking>(`/bookings/${id}/cancel`, 'POST', undefined, true)
   const booking = toBooking(row)
   cachedBookings = cachedBookings.map((item) => (item.id === id ? booking : item))
   return booking
 }
 
 export function getBookings() {
+  if (!getSession()) cachedBookings = []
   return cachedBookings
 }
 
 export function getUpcomingCount() {
   const today = startOfToday()
-  return cachedBookings.filter((item) => item.status === 'confirmed' && item.dateTs >= today).length
+  return getBookings().filter((item) => item.status === 'confirmed' && item.dateTs >= today).length
 }
 
 export function getConfirmedCount() {
-  return cachedBookings.filter((item) => item.status === 'confirmed').length
+  return getBookings().filter((item) => item.status === 'confirmed').length
 }

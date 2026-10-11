@@ -3,6 +3,8 @@ import { addDays, diffDays, formatFullDate, formatShortDate, formatWeekday, star
 import { getLayoutMetrics } from '../../utils/layout'
 import { FALLBACK_STORE, fetchStore, type StoreInfo } from '../../utils/store'
 import { syncTabBar } from '../../utils/tab'
+import { getSession } from '../../utils/session'
+import { openPrivacyContract } from '../../utils/privacy'
 
 type ResvStep = 'pick' | 'form' | 'success'
 
@@ -236,16 +238,20 @@ Page({
     if (!selectedSlot || dayClosed) return
     const slot = rawSlots.find((item) => item.id === selectedSlot)
     if (!slot || slot.isFull || slot.isPast) return
+    const nickname = getSession()?.user.nickname
+    const name = this.data.name || (nickname && nickname !== '书友' ? nickname : '')
     this.setData({
       step: 'form',
-      fieldsReady: this.isFieldsReady(this.data.name, this.data.phone),
-      canSubmit: this.isFormReady(this.data.name, this.data.phone, this.data.noticeRead),
+      name,
+      fieldsReady: this.isFieldsReady(name, this.data.phone),
+      canSubmit: this.isFormReady(name, this.data.phone, this.data.noticeRead),
     })
   },
   onBackPick() {
     this.setData({ step: 'pick' })
     this.refreshPick()
   },
+  onOpenPrivacy() { openPrivacyContract() },
   isFieldsReady(name: string, phone: string) {
     return Boolean(name.trim() && phone.trim())
   },

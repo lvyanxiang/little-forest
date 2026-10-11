@@ -6,7 +6,6 @@ import {
   NotFoundException,
   Post,
   Put,
-  Query,
   Res,
   UploadedFile,
   UseGuards,
@@ -45,27 +44,6 @@ export class AdminStoreController {
   @Get()
   getStore() {
     return this.storeService.getPublic();
-  }
-
-  @Get('geocode')
-  geocode(@Query('address') address: string) {
-    if (!address?.trim()) {
-      throw new BadRequestException('请输入地址');
-    }
-    return this.storeService.lookupAddress(address);
-  }
-
-  @Get('reverse-geocode')
-  reverseGeocode(
-    @Query('latitude') latitude: string,
-    @Query('longitude') longitude: string,
-  ) {
-    const lat = Number(latitude);
-    const lng = Number(longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      throw new BadRequestException('请传入有效的经纬度');
-    }
-    return this.storeService.lookupCoords(lat, lng);
   }
 
   @Put()

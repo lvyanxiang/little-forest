@@ -34,7 +34,7 @@ export function LoginPage({ onLogin, message }: Props) {
       <section className="w-full max-w-[420px] rounded-2xl border border-line bg-white p-7 shadow-sm sm:p-10">
         <p className="mb-2 mt-0 text-sm tracking-[0.2em] text-bark">小森林书店</p>
         <h1 className="mb-3 mt-0 text-3xl font-semibold">登录管理后台</h1>
-        <p className="mb-8 mt-0 text-sm leading-6 text-bark">管理门店信息、预约时段与首页内容。</p>
+        <p className="mb-8 mt-0 text-sm leading-6 text-bark">管理首页内容、到店须知与预约。</p>
         <form onSubmit={submit} className="grid gap-5">
           <label className="grid gap-2">
             <span className="text-sm font-medium">邮箱</span>

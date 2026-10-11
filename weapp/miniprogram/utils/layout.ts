@@ -11,7 +11,8 @@ export interface LayoutMetrics {
 }
 
 export function getLayoutMetrics(): LayoutMetrics {
-  const win = wx.getWindowInfo()
+  const windowApi = wx as typeof wx & { getWindowInfo?: () => ReturnType<typeof wx.getSystemInfoSync> }
+  const win = windowApi.getWindowInfo ? windowApi.getWindowInfo() : wx.getSystemInfoSync()
   const menu = wx.getMenuButtonBoundingClientRect()
   const windowWidth = win.windowWidth || 375
   const windowHeight = win.windowHeight || 667

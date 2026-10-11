@@ -11,29 +11,7 @@ import {
 export class UpdateStoreDto {
   @IsOptional()
   @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
   address?: string;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  latitude?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  longitude?: number;
-
-  @IsOptional()
-  @IsString()
-  phone?: string;
-
-  @IsOptional()
-  @IsString()
-  hours?: string;
 
   @IsOptional()
   @IsArray()
@@ -55,10 +33,6 @@ export class UpdateStoreDto {
   @IsOptional()
   @IsString()
   noticeFoot?: string;
-
-  @IsOptional()
-  @IsString()
-  homeNoticeText?: string;
 
   @IsOptional()
   @IsString()

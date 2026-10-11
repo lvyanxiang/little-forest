@@ -9,7 +9,7 @@ import { api, AUTH_EXPIRED_EVENT, getAdminToken, type AdminUser } from './api'
 
 const MENUS = [
   { id: 'home', label: '首页设置' },
-  { id: 'store', label: '门店信息' },
+  { id: 'store', label: '预约设置' },
   { id: 'slots', label: '时段与名额' },
   { id: 'notice', label: '预约须知' },
   { id: 'bookings', label: '预约记录' },

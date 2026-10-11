@@ -3,38 +3,38 @@ import {
   Controller,
   Get,
   Param,
+  ParseUUIDPipe,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { AdminAuthGuard } from '../auth/admin-auth.guard';
-import {
-  CancelBookingDto,
-  CreateBookingDto,
-  ListBookingsQueryDto,
-} from './dto/booking.dto';
+import { WechatAuthGuard, WechatRequest } from '../wechat/wechat-auth.guard';
+import { CreateBookingDto, ListBookingsQueryDto } from './dto/booking.dto';
 
 @Controller('bookings')
+@UseGuards(WechatAuthGuard)
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Get()
-  mine(@Query() query: ListBookingsQueryDto) {
-    if (!query.clientId) {
-      return [];
-    }
-    return this.bookingsService.mine(query.clientId);
+  mine(@Req() request: WechatRequest) {
+    return this.bookingsService.mine(request.wechatSession.userId);
   }
 
   @Post()
-  create(@Body() body: CreateBookingDto) {
-    return this.bookingsService.create(body);
+  create(@Body() body: CreateBookingDto, @Req() request: WechatRequest) {
+    return this.bookingsService.create(body, request.wechatSession.userId);
   }
 
   @Post(':id/cancel')
-  cancel(@Param('id') id: string, @Body() body: CancelBookingDto) {
-    return this.bookingsService.cancel(id, body.clientId);
+  cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: WechatRequest,
+  ) {
+    return this.bookingsService.cancel(id, request.wechatSession.userId);
   }
 }
 

@@ -35,3 +35,5 @@ npm run build
 ```
 
 构建产物在 `dist`。生产 Docker 部署通过 Nginx 转发 API，本地 Vite 代理配置不影响生产 Nginx。部署步骤见仓库根目录的 [DEPLOYMENT.md](../DEPLOYMENT.md)。
+
+Docker 容器内 Nginx 监听 `8080`，Compose 默认映射 `127.0.0.1:8080 → 容器 8080`。宿主机端口由 `.env.production` 的 `ADMIN_PORT` 配置；本地 Vite 开发端口仍为 `5174`。

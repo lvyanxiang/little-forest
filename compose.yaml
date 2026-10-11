@@ -18,9 +18,10 @@ services:
       DB_USERNAME: ${DB_USERNAME:?请配置数据库用户名}
       DB_PASSWORD: ${DB_PASSWORD:?请配置数据库密码}
       DB_NAME: ${DB_NAME:?请配置数据库名}
-      TENCENT_MAP_KEY: ${TENCENT_MAP_KEY:-}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-lvyanxiang088@gmail.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-19970804}
+      WECHAT_APPID: ${WECHAT_APPID:-}
+      WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:-}
     ports:
       - "${SERVICE_BIND_IP:-127.0.0.1}:${SERVICE_PORT:-3000}:${SERVICE_PORT:-3000}"
     networks:
@@ -47,11 +48,11 @@ services:
       service:
         condition: service_healthy
     ports:
-      - "${ADMIN_BIND_IP:-127.0.0.1}:${ADMIN_PORT:-8080}:80"
+      - "${ADMIN_BIND_IP:-127.0.0.1}:${ADMIN_PORT:-8080}:8080"
     networks:
       - app
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3

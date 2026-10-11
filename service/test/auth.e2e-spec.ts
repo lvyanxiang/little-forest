@@ -63,8 +63,6 @@ describe('Admin authentication (e2e)', () => {
   it('rejects unauthenticated management reads, writes and uploads', async () => {
     const routes = [
       ['get', '/api/admin/store'],
-      ['get', '/api/admin/store/geocode?address=test'],
-      ['get', '/api/admin/store/reverse-geocode?latitude=31&longitude=121'],
       ['put', '/api/admin/store'],
       ['post', '/api/admin/store/home-image'],
       ['get', '/api/admin/slots'],

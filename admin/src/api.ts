@@ -1,21 +1,13 @@
 export type StorePayload = {
   id: number
-  name: string
   address: string
-  latitude: number
-  longitude: number
-  phone: string
-  phoneDisplay: string
-  hours: string
   closedWeekdays: number[]
   noticeHeading: string
   noticeItems: string[]
   noticeFoot: string
-  homeNoticeText: string
   homeHeroText: string
   homeHeroImageUrl: string
   successNoticeLines: string[]
-  geocodeStatus?: 'updated' | 'unchanged' | 'skipped' | 'failed'
 }
 
 export type SlotPayload = {
@@ -107,14 +99,6 @@ export const api = {
     body.append('image', file)
     return request<StorePayload>('/api/admin/store/home-image', { method: 'POST', body })
   },
-  geocodeAddress: (address: string) =>
-    request<{ latitude: number; longitude: number }>(
-      `/api/admin/store/geocode?address=${encodeURIComponent(address)}`,
-    ),
-  reverseGeocode: (latitude: number, longitude: number) =>
-    request<{ address: string }>(
-      `/api/admin/store/reverse-geocode?latitude=${encodeURIComponent(String(latitude))}&longitude=${encodeURIComponent(String(longitude))}`,
-    ),
   listSlots: () => request<SlotPayload[]>('/api/admin/slots'),
   createSlot: (body: Partial<SlotPayload>) =>
     request<SlotPayload>('/api/admin/slots', {

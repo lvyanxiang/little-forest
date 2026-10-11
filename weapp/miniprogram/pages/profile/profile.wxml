@@ -2,10 +2,13 @@
   <app-header title="我的" />
 
   <view class="user-card">
-    <view class="avatar">🌿</view>
+    <view class="avatar" bindtap="onEditProfile">
+      <image wx:if="{{avatarUrl}}" src="{{avatarUrl}}" class="avatar-image" mode="aspectFill" />
+      <text wx:else>🌿</text>
+    </view>
     <view class="user-meta">
       <text class="user-name serif">{{displayName}}</text>
-      <text class="user-phone">{{displayPhone}}</text>
+      <text class="user-phone">{{loggedIn ? '微信已登录' : '登录后同步您的预约'}}</text>
     </view>
     <view class="user-count">
       <text class="count-num serif">{{confirmedCount}}</text>
@@ -13,11 +16,20 @@
     </view>
   </view>
 
+  <view class="account-actions">
+    <button wx:if="{{!loggedIn}}" class="account-button primary" loading="{{loggingIn}}" disabled="{{loggingIn}}" bindtap="onLogin">微信登录</button>
+    <block wx:else>
+      <button class="account-button primary" bindtap="onEditProfile">完善头像昵称</button>
+      <button class="account-button" disabled="{{loggingOut}}" bindtap="onLogout">{{loggingOut ? '退出中…' : '退出登录'}}</button>
+    </block>
+  </view>
+  <view class="privacy-link" bindtap="onOpenPrivacy">查看《用户隐私保护指引》</view>
+
   <view class="section">
     <text class="section-title serif">即将到来</text>
     <view wx:if="{{upcoming.length === 0}}" class="empty" bindtap="onGoReserve">
       <text class="empty-icon">📖</text>
-      <text class="empty-text">暂无预约，点击去预约</text>
+      <text class="empty-text">{{loggedIn ? '暂无预约，点击去预约' : '微信登录后查看您的预约'}}</text>
     </view>
     <view wx:else class="up-list">
       <view wx:for="{{upcoming}}" wx:key="id" class="up-card">
@@ -55,6 +67,36 @@
           <text class="past-slot">{{item.slot}}</text>
         </view>
         <text class="past-tag">{{item.statusText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showProfileEditor}}" class="mask" catchtouchmove="noop" bindtap="onCloseProfile">
+    <view class="dialog profile-dialog" catchtap="noop">
+      <text class="dialog-title serif">完善个人资料</text>
+      <text class="dialog-desc">头像和昵称由您选择，仅用于您的个人资料。</text>
+      <button class="avatar avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" disabled="{{savingProfile}}">
+        <image wx:if="{{draftAvatar || avatarUrl}}" src="{{draftAvatar || avatarUrl}}" class="avatar-image" mode="aspectFill" />
+        <text wx:else>🌿</text>
+      </button>
+      <text class="avatar-hint">点击选择头像（最大 2MB）</text>
+      <input class="nickname-input" type="nickname" maxlength="40" value="{{draftNickname}}" placeholder="填写昵称" bindinput="onNicknameInput" bindblur="onNicknameInput" bindnicknamereview="onNicknameReview" disabled="{{savingProfile}}" />
+      <text wx:if="{{profileError}}" class="profile-error">{{profileError}}</text>
+      <view class="dialog-actions">
+        <button class="dialog-btn ghost" bindtap="onCloseProfile" disabled="{{savingProfile}}">取消</button>
+        <button class="dialog-btn solid" bindtap="onSaveProfile" loading="{{savingProfile}}" disabled="{{savingProfile || !nicknameAllowed}}">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showPrivacy}}" class="mask privacy-mask" catchtouchmove="noop">
+    <view class="dialog" catchtap="noop">
+      <text class="dialog-title serif">用户隐私保护</text>
+      <text class="dialog-desc">选择头像前，请阅读并同意用户隐私保护指引。您可以保留默认头像继续使用预约。</text>
+      <view class="privacy-link" bindtap="onOpenPrivacy">查看《用户隐私保护指引》</view>
+      <view class="dialog-actions">
+        <button class="dialog-btn ghost" bindtap="onRejectPrivacy">暂不授权</button>
+        <button id="agree-profile-privacy" class="dialog-btn solid" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="onAgreePrivacy">同意</button>
       </view>
     </view>
   </view>
