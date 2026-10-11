@@ -9,12 +9,14 @@ import {
   Query,
   Res,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { HomeHeroUpload, StoreService } from './store.service';
+import { AdminAuthGuard } from '../auth/admin-auth.guard';
 
 @Controller('store')
 export class StoreController {
@@ -36,6 +38,7 @@ export class StoreController {
 }
 
 @Controller('admin/store')
+@UseGuards(AdminAuthGuard)
 export class AdminStoreController {
   constructor(private readonly storeService: StoreService) {}
 

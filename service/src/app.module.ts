@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { BookingsModule } from './bookings/bookings.module';
 import { SlotsModule } from './slots/slots.module';
 import { StoreModule } from './store/store.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { StoreModule } from './store/store.module';
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
+    AuthModule,
     StoreModule,
     SlotsModule,
     BookingsModule,

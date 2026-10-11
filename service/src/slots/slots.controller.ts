@@ -9,9 +9,11 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateSlotDto, ReorderSlotsDto, UpdateSlotDto } from './dto/slot.dto';
 import { SlotsService } from './slots.service';
+import { AdminAuthGuard } from '../auth/admin-auth.guard';
 
 @Controller('slots')
 export class SlotsController {
@@ -27,6 +29,7 @@ export class SlotsController {
 }
 
 @Controller('admin/slots')
+@UseGuards(AdminAuthGuard)
 export class AdminSlotsController {
   constructor(private readonly slotsService: SlotsService) {}
 

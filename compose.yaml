@@ -19,6 +19,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?请配置数据库密码}
       DB_NAME: ${DB_NAME:?请配置数据库名}
       TENCENT_MAP_KEY: ${TENCENT_MAP_KEY:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-lvyanxiang088@gmail.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-19970804}
     ports:
       - "${SERVICE_BIND_IP:-127.0.0.1}:${SERVICE_PORT:-3000}:${SERVICE_PORT:-3000}"
     networks:

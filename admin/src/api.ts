@@ -41,14 +41,40 @@ export type BookingPayload = {
   createdAt: string
 }
 
+export type AdminUser = { email: string; expiresAt: string }
+
+const TOKEN_KEY = 'little-forest-admin-token'
+export const AUTH_EXPIRED_EVENT = 'little-forest-auth-expired'
+
+export function getAdminToken() {
+  return sessionStorage.getItem(TOKEN_KEY)
+}
+
+export function clearAdminToken() {
+  sessionStorage.removeItem(TOKEN_KEY)
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers)
+  if (!(init?.body instanceof FormData)) headers.set('Content-Type', 'application/json')
+  const token = getAdminToken()
+  if (token) headers.set('Authorization', `Bearer ${token}`)
   const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
     ...init,
+    headers,
   })
   const text = await res.text()
-  const data = text ? JSON.parse(text) : null
+  let data
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    throw new Error('服务暂时不可用，请稍后重试')
+  }
   if (!res.ok) {
+    if (res.status === 401 && path !== '/api/auth/login') {
+      clearAdminToken()
+      window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
+    }
     const message = Array.isArray(data?.message) ? data.message[0] : data?.message
     throw new Error(message || `请求失败 ${res.status}`)
   }
@@ -56,6 +82,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  login: async (email: string, password: string): Promise<AdminUser> => {
+    const result = await request<AdminUser & { token: string }>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+    sessionStorage.setItem(TOKEN_KEY, result.token)
+    return { email: result.email, expiresAt: result.expiresAt }
+  },
+  me: () => request<AdminUser>('/api/auth/me'),
+  logout: async () => {
+    await request<{ ok: boolean }>('/api/auth/logout', { method: 'POST' })
+    clearAdminToken()
+  },
   health: () => request<{ ok: boolean }>('/api/health'),
   getStore: () => request<StorePayload>('/api/admin/store'),
   saveStore: (body: Partial<StorePayload>) =>
@@ -66,14 +105,7 @@ export const api = {
   uploadHomeImage: async (file: File) => {
     const body = new FormData()
     body.append('image', file)
-    const res = await fetch('/api/admin/store/home-image', { method: 'POST', body })
-    const text = await res.text()
-    const data = text ? JSON.parse(text) : null
-    if (!res.ok) {
-      const message = Array.isArray(data?.message) ? data.message[0] : data?.message
-      throw new Error(message || `上传失败 ${res.status}`)
-    }
-    return data as StorePayload
+    return request<StorePayload>('/api/admin/store/home-image', { method: 'POST', body })
   },
   geocodeAddress: (address: string) =>
     request<{ latitude: number; longitude: number }>(

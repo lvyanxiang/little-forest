@@ -150,7 +150,19 @@ docker compose --env-file .env.production -f compose.yaml -f compose.proxy.yaml 
 
 此时代理目标分别为 `http://little-forest-admin:80` 和 `http://little-forest-api:3001`。不用为了容器间通信开放公网端口。外层反向代理的上传大小也应设置为至少 `6m`，否则 5 MiB 图片上传可能被拒绝。
 
-当前 `/api/admin/*` 还没有登录鉴权；发布公网后台前，需要接入后台认证或在入口限制访问。
+后台现在需要登录，门店设置、图片上传、时段管理和预约记录接口均由后端验证登录会话。小程序公开接口及健康检查不要求后台登录。
+
+默认账号是 `lvyanxiang088@gmail.com`，默认密码是 `19970804`。可在后端 `service/.env`（本地）或根目录 `.env.production`（Docker）配置 `ADMIN_EMAIL`、`ADMIN_PASSWORD`；修改后重启本地后端，或通过 Compose 重建后端容器生效。更换账号或密码后，旧会话自动失效。
+
+登录会话有效期为 12 小时，浏览器通过 `sessionStorage` 保存会话令牌；刷新页面会校验并恢复登录，关闭标签页后需重新登录。数据库仅保存令牌摘要，退出登录会删除当前会话；服务重启不影响未过期会话。连续登录失败会触发限流。线上通过 HTTPS 域名使用后台。
+
+已有部署增加登录功能时，需要同时更新前后端并先执行新增的会话表迁移：
+
+```bash
+docker compose --env-file .env.production build service admin
+docker compose --env-file .env.production run --rm --no-deps service npm run db:migrate
+docker compose --env-file .env.production up -d
+```
 
 ## 5. 更新与独立构建
 

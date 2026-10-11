@@ -5,8 +5,10 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
+import { AdminAuthGuard } from '../auth/admin-auth.guard';
 import {
   CancelBookingDto,
   CreateBookingDto,
@@ -37,6 +39,7 @@ export class BookingsController {
 }
 
 @Controller('admin/bookings')
+@UseGuards(AdminAuthGuard)
 export class AdminBookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
