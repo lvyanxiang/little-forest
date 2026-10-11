@@ -36,6 +36,8 @@
   width: 270rpx;
   height: 150rpx;
   display: block;
+  -webkit-filter: invert(1);
+  filter: invert(1);
 }
 
 .copy {

@@ -20,7 +20,7 @@ services:
       DB_NAME: ${DB_NAME:?请配置数据库名}
       TENCENT_MAP_KEY: ${TENCENT_MAP_KEY:-}
     ports:
-      - "${SERVICE_BIND_IP:-127.0.0.1}:${SERVICE_PORT:-3001}:3001"
+      - "${SERVICE_BIND_IP:-127.0.0.1}:${SERVICE_PORT:-3000}:3000"
     networks:
       - app
       - database
