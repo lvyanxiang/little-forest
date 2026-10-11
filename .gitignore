@@ -9,3 +9,7 @@ coverage/
 *.local
 project.private.config.json
 weapp/project.private.config.json
+.env
+.env.*
+!.env.example
+!.env.*.example

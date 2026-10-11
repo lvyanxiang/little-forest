@@ -1,0 +1,61 @@
+name: little-forest
+
+services:
+  service:
+    image: little-forest-service:local
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      TZ: Asia/Shanghai
+      HOST: 0.0.0.0
+      PORT: 3001
+      DB_HOST: ${DB_HOST:?请配置数据库容器名称或网络别名}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USERNAME: ${DB_USERNAME:?请配置数据库用户名}
+      DB_PASSWORD: ${DB_PASSWORD:?请配置数据库密码}
+      DB_NAME: ${DB_NAME:?请配置数据库名}
+      TENCENT_MAP_KEY: ${TENCENT_MAP_KEY:-}
+    ports:
+      - "${SERVICE_BIND_IP:-127.0.0.1}:${SERVICE_PORT:-3001}:3001"
+    networks:
+      - app
+      - database
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/api/health').then(async r => { if (!r.ok || !(await r.json()).ok) process.exit(1); }).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+  admin:
+    image: little-forest-admin:local
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      service:
+        condition: service_healthy
+    ports:
+      - "${ADMIN_BIND_IP:-127.0.0.1}:${ADMIN_PORT:-8080}:80"
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  app:
+  database:
+    external: true
+    name: ${DB_NETWORK:?请配置 PostgreSQL 所在的 Docker 网络}

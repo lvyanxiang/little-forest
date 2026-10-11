@@ -558,15 +558,17 @@
   width: 192rpx;
   height: 192rpx;
   border-radius: 50%;
-  background: #242522;
+  background: #FFFFFF;
+  border: 2rpx solid #242522;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .success-img {
-  width: 96rpx;
-  height: 96rpx;
+  width: 160rpx;
+  height: 132rpx;
 }
 
 .success-ring {

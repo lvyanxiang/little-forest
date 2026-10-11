@@ -31,21 +31,11 @@
 
 .brand-mark {
   position: absolute;
-  top: 280rpx;
+  top: 230rpx;
   right: 56rpx;
-  width: 120rpx;
-  height: 72rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.76);
-}
-
-.brand-placeholder {
-  font-size: 28rpx;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: #242522;
+  width: 270rpx;
+  height: 150rpx;
+  display: block;
 }
 
 .copy {

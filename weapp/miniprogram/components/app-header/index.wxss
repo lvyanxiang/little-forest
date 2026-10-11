@@ -28,25 +28,6 @@
 
 .logo {
   flex-shrink: 0;
-  margin-right: 12rpx;
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.en {
-  font-size: 18rpx;
-  color: #70726D;
-  letter-spacing: 0.16em;
-  line-height: 1.2;
-}
-
-.zh {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #242522;
-  line-height: 1.2;
+  width: 112rpx;
+  height: 64rpx;
 }

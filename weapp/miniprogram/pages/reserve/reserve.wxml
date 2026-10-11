@@ -133,7 +133,7 @@
   <view wx:else class="success-body">
     <view class="success-logo-wrap">
       <view class="success-logo">
-        <image src="/assets/logo.svg" class="success-img" mode="aspectFit" />
+        <image src="/assets/logo.png" class="success-img" mode="aspectFill" />
       </view>
       <view class="success-ring"></view>
     </view>

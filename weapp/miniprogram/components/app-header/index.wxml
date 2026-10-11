@@ -13,13 +13,8 @@
   >
     <image
       class="logo"
-      src="/assets/logo.svg"
-      mode="aspectFit"
-      style="width: {{menuHeight}}px; height: {{menuHeight}}px;"
+      src="/assets/logo.png"
+      mode="aspectFill"
     />
-    <view class="brand-text">
-      <text class="en">LITTLE FOREST</text>
-      <text class="zh serif">小森林书店</text>
-    </view>
   </view>
 </view>
