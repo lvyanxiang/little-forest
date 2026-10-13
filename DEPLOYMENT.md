@@ -1,5 +1,7 @@
 # Docker 部署与 1Panel
 
+状态同步（2026-10-13）：负责人已确认认证和公众平台配置完成，当前剩余小程序版本上传、提审和发布，见 [上线准备清单.md](./上线准备清单.md)。本文是服务器部署 / 升级参考，不是平台认证待办清单。服务器升级与小程序上传分别执行；仓库中的改动需要部署到对应环境后生效。
+
 本仓库包含三个独立项目：`admin`、`service`、`weapp`。没有 npm Workspaces，也没有跨目录共享依赖。每个项目使用自己的 `package.json` 和锁文件，独立安装和构建。根目录的 npm 脚本只方便本地启动；Docker 不使用根目录的 `package-lock.json`。
 
 ## 部署结构
@@ -85,7 +87,7 @@ docker compose --env-file .env.production config --quiet
 docker compose --env-file .env.production build
 
 # 首次部署及新增 SQL 迁移后，在启动新版应用前执行
-docker compose --env-file .env.production run --rm --no-deps service npm run db:migrate
+docker compose --env-file .env.production run --rm --no-deps service npm run db:init
 
 docker compose --env-file .env.production up -d
 docker compose --env-file .env.production ps
@@ -94,7 +96,7 @@ docker compose --env-file .env.production logs --tail=100 service admin
 
 生产环境的 `NODE_ENV=production` 会关闭 TypeORM 自动同步表结构。迁移命令按文件名顺序执行 SQL，并将成功的文件记录到 `app_schema_migrations`；同一事务执行，有错误时全部回滚，并锁定并发迁移。不要修改已执行的 SQL 文件，后续变更应新增文件。
 
-初始脚本创建当前项目的三个业务表；已有同名表会保留。随后执行原有首页字段迁移。它兼容当前实体结构或仅缺少首页字段的数据库，不会自动修复任意历史表结构。已有数据库更新前，在 1Panel 备份。服务启动后会通过现有代码创建默认门店和预约时段。
+初始脚本创建当前项目的三个业务表；已有同名表会保留。随后执行原有首页字段迁移。它兼容当前实体结构或仅缺少首页字段的数据库，不会自动修复任意历史表结构。已有数据库更新前，在 1Panel 备份。初始业务数据统一来自 `service/init/init.sql`；服务启动不再自动创建门店或时段。`db:init` 会先执行迁移，再执行初始化 SQL，可重复运行，不会覆盖已编辑的门店、文案、图片、时段或预约记录。
 
 检查后台和 API：
 
@@ -159,7 +161,7 @@ docker compose --env-file .env.production -f compose.yaml -f compose.proxy.yaml 
 
 ```bash
 docker compose --env-file .env.production build service admin
-docker compose --env-file .env.production run --rm --no-deps service npm run db:migrate
+docker compose --env-file .env.production run --rm --no-deps service npm run db:init
 docker compose --env-file .env.production up -d
 ```
 
@@ -172,7 +174,7 @@ docker compose --env-file .env.production build admin
 docker compose --env-file .env.production up -d --no-deps admin
 
 docker compose --env-file .env.production build service
-docker compose --env-file .env.production run --rm --no-deps service npm run db:migrate
+docker compose --env-file .env.production run --rm --no-deps service npm run db:init
 docker compose --env-file .env.production up -d --no-deps service
 ```
 
@@ -192,3 +194,17 @@ docker build -t little-forest-service:local ./service
 - [Docker Compose 环境变量加载](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/)
 - [Docker Compose 外部网络](https://docs.docker.com/compose/how-tos/networking/)
 - [1Panel 编排管理](https://1panel.pro/docs/v2/user_manual/containers/composes/)
+
+## 服务端业务配置与首次初始化
+
+首次本地启动或升级到服务端文案版本，执行：
+
+```bash
+npm run db:init --prefix service
+```
+
+`db:init` 包含结构迁移与 `service/init/init.sql` 数据初始化。SQL 内包含门店内容、首页与品牌图片、须知、Wi-Fi 文案、登录及手机号说明、初始时段，以及快捷日期数量和最多提前预约天数。图片以 data URL 保存到数据库，通过后端图片接口读取。
+
+公众平台的隐私保护指引仍需在平台配置；后台「小程序文案」里的告知内容应与平台指引及实际处理保持一致。后台「预约设置」可修改预约范围与快捷日期数量，客户端日历和后端提交校验都使用相同规则。
+
+现有部署也需执行一次 `db:init`，补齐新增配置字段。初始化仅补缺失内容和未设置的图片，不会重置已编辑的值。仅更新结构且已初始化的数据可单独运行 `npm run db:migrate --prefix service`。服务不会在启动时重新插入已删除或下线的时段。

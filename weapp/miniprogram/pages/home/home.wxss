@@ -86,3 +86,6 @@
   letter-spacing: 0.22em;
   color: #292e27;
 }
+
+.load-state { padding: 100rpx 48rpx; text-align: center; font-size: 28rpx; color: #70726D; }
+.load-state button { margin-top: 24rpx; font-size: 26rpx; }

@@ -3,6 +3,7 @@ import { BookingsPage } from './pages/BookingsPage'
 import { NoticePage } from './pages/NoticePage'
 import { SlotsPage } from './pages/SlotsPage'
 import { StorePage } from './pages/StorePage'
+import { MiniProgramTextPage } from './pages/MiniProgramTextPage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { api, AUTH_EXPIRED_EVENT, getAdminToken, type AdminUser } from './api'
@@ -12,6 +13,7 @@ const MENUS = [
   { id: 'store', label: '预约设置' },
   { id: 'slots', label: '时段与名额' },
   { id: 'notice', label: '预约须知' },
+  { id: 'text', label: '小程序文案' },
   { id: 'bookings', label: '预约记录' },
 ] as const
 
@@ -114,6 +116,7 @@ function App() {
         {menu === 'store' ? <StorePage /> : null}
         {menu === 'slots' ? <SlotsPage /> : null}
         {menu === 'notice' ? <NoticePage /> : null}
+        {menu === 'text' ? <MiniProgramTextPage /> : null}
         {menu === 'bookings' ? <BookingsPage /> : null}
       </main>
     </div>

@@ -34,6 +34,7 @@ export class BookingsService {
       throw new BadRequestException('不能预约过去的日期');
     }
     const store = await this.storeService.getPublic();
+    this.storeService.assertBookingDate(dto.visitDate, store.bookingAdvanceDays);
     if (store.closedWeekdays.includes(weekdayOf(dto.visitDate))) {
       throw new BadRequestException('该日闭馆，无法预约');
     }

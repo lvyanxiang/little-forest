@@ -28,6 +28,6 @@
         <view wx:if="{{item.isToday && !item.isSel}}" class="today-dot"></view>
       </view>
     </view>
-    <text class="hint">可预约范围：今日起 90 天内</text>
+    <text class="hint">可提前预约 {{bookingAdvanceDays}} 天</text>
   </view>
 </view>

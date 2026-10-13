@@ -1,7 +1,8 @@
 {
   "usingComponents": {
     "app-header": "/components/app-header/index",
-    "calendar-modal": "/components/calendar-modal/index"
+    "calendar-modal": "/components/calendar-modal/index",
+    "login-consent": "/components/login-consent/index"
   },
   "backgroundColor": "#FFFFFF"
 }

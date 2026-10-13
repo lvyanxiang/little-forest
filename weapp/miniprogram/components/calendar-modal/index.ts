@@ -20,13 +20,14 @@ Component({
       type: Number,
       value: 0,
     },
+    bookingAdvanceDays: { type: Number, value: 0 },
     closedWeekdays: {
       type: Array,
       value: [] as number[],
     },
   },
   data: {
-    viewYear: 2026,
+    viewYear: new Date(startOfToday()).getFullYear(),
     viewMonth: 0,
     canPrev: false,
     canNext: true,
@@ -35,7 +36,7 @@ Component({
     weekdays: ['日', '一', '二', '三', '四', '五', '六'],
   },
   observers: {
-    'show, selectedTs, closedWeekdays'(show: boolean) {
+    'show, selectedTs, closedWeekdays, bookingAdvanceDays'(show: boolean) {
       if (!show) return
       const selected = this.data.selectedTs || startOfToday()
       const d = new Date(selected)
@@ -49,7 +50,7 @@ Component({
       const { selectedTs, closedWeekdays } = this.data
       const closed = (closedWeekdays || []) as number[]
       const today = startOfToday()
-      const maxDate = addDays(today, 90)
+      const maxDate = addDays(today, this.data.bookingAdvanceDays)
       const selected = selectedTs || today
       const first = new Date(viewYear, viewMonth, 1)
       const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()

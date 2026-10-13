@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Transform } from 'class-transformer';
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsString, MaxLength, MinLength, ValidateIf } from 'class-validator';
 import type { Response } from 'express';
 import { WechatAuthGuard, WechatRequest } from './wechat-auth.guard';
 import { AvatarUpload, WechatService } from './wechat.service';
@@ -25,11 +25,12 @@ class WechatLoginDto {
 }
 
 class ProfileDto {
+  @ValidateIf((_object, value) => value !== undefined)
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @MinLength(1)
   @MaxLength(40)
-  nickname: string;
+  nickname?: string;
 }
 
 @Controller('wechat')
@@ -46,6 +47,13 @@ export class WechatController {
   @UseGuards(WechatAuthGuard)
   me(@Req() request: WechatRequest) {
     return this.wechat.profile(request.wechatSession.userId);
+  }
+
+  @Post('phone-number')
+  @UseGuards(WechatAuthGuard)
+  @Header('Cache-Control', 'no-store')
+  phoneNumber(@Body() body: WechatLoginDto) {
+    return this.wechat.phoneNumber(body.code);
   }
 
   @Post('profile')

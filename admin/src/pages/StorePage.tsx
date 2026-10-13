@@ -9,7 +9,7 @@ const WEEKDAYS = [
 ]
 
 const EMPTY: StorePayload = {
-  id: 1, address: '', closedWeekdays: [], noticeHeading: '',
+  id: 1, name: '', quickDateDays: 0, bookingAdvanceDays: 0, uiText: {}, uiTextLabels: {}, brandLogoUrl: '', address: '', closedWeekdays: [], noticeHeading: '',
   noticeItems: [], noticeFoot: '', homeHeroText: '',
   homeHeroImageUrl: '', successNoticeLines: [],
 }
@@ -38,6 +38,9 @@ export function StorePage() {
     setMessage('')
     try {
       const saved = await api.saveStore({
+        name: form.name,
+        quickDateDays: form.quickDateDays,
+        bookingAdvanceDays: form.bookingAdvanceDays,
         address: form.address,
         closedWeekdays: form.closedWeekdays,
       })
@@ -54,6 +57,18 @@ export function StorePage() {
     <div className="w-full max-w-3xl">
       <p className="mb-6 mt-0 text-sm leading-6 text-bark">地址显示在预约成功页；闭馆星期用于预约页的日期选择。</p>
       <div className="grid gap-4">
+        <label className="grid gap-1.5">
+          <span className="text-sm text-bark">门店名称</span>
+          <input className="rounded-lg border border-line bg-white px-3 py-2" value={form.name} onChange={(event) => patch('name', event.target.value)} />
+        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-1.5"><span className="text-sm text-bark">快捷日期数量（含今天，1–365）</span>
+            <input type="number" min={1} max={365} className="rounded-lg border border-line bg-white px-3 py-2" value={form.quickDateDays} onChange={(event) => patch('quickDateDays', Number(event.target.value))} />
+          </label>
+          <label className="grid gap-1.5"><span className="text-sm text-bark">最多提前预约天数（1–3650）</span>
+            <input type="number" min={1} max={3650} className="rounded-lg border border-line bg-white px-3 py-2" value={form.bookingAdvanceDays} onChange={(event) => patch('bookingAdvanceDays', Number(event.target.value))} />
+          </label>
+        </div>
         <label className="grid gap-1.5">
           <span className="text-sm text-bark">到店地址</span>
           <textarea className="min-h-[90px] rounded-lg border border-line bg-white px-3 py-2" value={form.address} onChange={(event) => patch('address', event.target.value)} />

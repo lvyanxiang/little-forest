@@ -1,9 +1,11 @@
 export interface WechatProfile {
   id: string
   nickname: string
+  isDefaultNickname?: boolean
   hasAvatar: boolean
   updatedAt: string
   avatarUrl?: string
+  avatarLoadFailed?: boolean
 }
 
 export interface WechatSession {

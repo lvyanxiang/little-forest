@@ -1,7 +1,11 @@
 <view class="page {{step === 'pick' ? 'page-pick' : ''}}" style="padding-bottom: {{pageBottom}}px;">
-  <app-header title="到店预约" />
+  <view wx:if="{{!storeReady || storeError}}" class="load-state">
+    <text>{{storeLoading ? '正在加载…' : storeError}}</text>
+    <button wx:if="{{!storeLoading}}" bindtap="bootstrap">重试</button>
+  </view>
+  <app-header title="{{uiText.reserveTitle}}" />
 
-  <block wx:if="{{step === 'pick'}}">
+  <block wx:if="{{storeReady && step === 'pick'}}">
     <scroll-view class="pick-scroll" scroll-y enhanced show-scrollbar="{{false}}">
     <view class="pick-body">
       <view class="date-head">
@@ -38,7 +42,7 @@
 
       <view class="slot-head">
         <text class="block-title serif">选择时段</text>
-        <text class="block-sub">每时段限额保障体验</text>
+        <text class="block-sub">{{uiText.slotSubtitle}}</text>
       </view>
 
       <view wx:if="{{dayClosed}}" class="closed-tip">该日闭馆，请选择其他日期</view>
@@ -82,9 +86,9 @@
       <text class="sticky-hint {{selectedSlot ? 'on' : ''}}">
         {{selectedSlot ? '已选：' + selectedDateText + ' · ' + selectedSlotLabel : '请选择到店时段'}}
       </text>
-      <view class="btn {{selectedSlot ? '' : 'off'}}" bindtap="onNext">
-        <text class="btn-text serif">下一步，填写信息</text>
-      </view>
+      <button class="btn {{selectedSlot ? '' : 'off'}}" bindtap="onNext" loading="{{enteringForm || storeLoading}}" disabled="{{!selectedSlot || enteringForm || storeLoading || storeError}}">
+        <text class="btn-text serif">{{enteringForm ? '正在登录…' : '下一步，填写信息'}}</text>
+      </button>
     </view>
   </block>
 
@@ -100,15 +104,16 @@
     </view>
     <view class="field">
       <text class="label">姓名</text>
-      <input class="input" value="{{name}}" placeholder="请输入您的姓名" placeholder-class="ph" bindinput="onNameInput" />
+      <input class="input" maxlength="40" value="{{name}}" placeholder="请输入您的姓名" placeholder-class="ph" bindinput="onNameInput" disabled="{{submitting}}" />
     </view>
     <view class="field">
       <text class="label">手机号</text>
-      <input class="input" type="number" maxlength="11" value="{{phone}}" placeholder="请输入您的手机号" placeholder-class="ph" bindinput="onPhoneInput" />
+      <input class="input" type="number" maxlength="11" value="{{phone}}" placeholder="请输入您的手机号" placeholder-class="ph" bindinput="onPhoneInput" disabled="{{submitting}}" />
+      <button class="wechat-phone" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber" loading="{{gettingPhone}}" disabled="{{gettingPhone || submitting}}">{{gettingPhone ? '正在获取…' : uiText.phoneAuthorizeText}}</button>
+      <text wx:if="{{phoneError}}" class="phone-error">{{phoneError}}</text>
     </view>
     <view class="notice">
-      <text class="notice-foot">微信账号用于同步预约，姓名和手机号用于到店联系。</text>
-      <text class="notice-foot" bindtap="onOpenPrivacy">查看《用户隐私保护指引》</text>
+      <text class="notice-foot">{{uiText.bookingPurposeText}}</text>
       <text class="notice-title serif">到店须知</text>
       <text class="notice-heading">{{noticeHeading}}</text>
       <view wx:for="{{noticeItems}}" wx:key="*this" class="notice-row">
@@ -124,23 +129,27 @@
         <view class="check-box">
           <view wx:if="{{noticeRead}}" class="check-mark"></view>
         </view>
-        <text class="check-label">我已阅读并知晓以上到店说明</text>
+        <text class="check-label">{{uiText.storeNoticeConsentText}}</text>
+      </view>
+      <view id="privacy-check" class="notice-check {{privacyAgreed ? 'on' : ''}}" bindtap="onTogglePrivacy" role="checkbox" aria-checked="{{privacyAgreed}}" aria-label="同意预约个人信息处理">
+        <view class="check-box"><view wx:if="{{privacyAgreed}}" class="check-mark"></view></view>
+        <view class="check-label">{{uiText.bookingConsentPrefix}}<text class="policy-link" catchtap="onOpenPrivacy">{{uiText.privacyPolicyName}}</text>{{uiText.bookingConsentSuffix}}</view>
       </view>
     </view>
-    <view class="btn {{fieldsReady ? '' : 'off'}}" bindtap="onConfirm">
-      <text class="btn-text serif">确认预约</text>
-    </view>
+    <button class="btn {{fieldsReady ? '' : 'off'}}" bindtap="onConfirm" loading="{{submitting}}" disabled="{{submitting}}">
+      <text class="btn-text serif">{{submitting ? '正在提交…' : '确认预约'}}</text>
+    </button>
   </view>
 
-  <view wx:else class="success-body">
+  <view wx:elif="{{step === 'success'}}" class="success-body">
     <view class="success-logo-wrap">
       <view class="success-logo">
-        <image src="/assets/logo.png" class="success-img" mode="aspectFill" />
+        <image src="{{brandLogoUrl}}" class="success-img" mode="aspectFill" />
       </view>
       <view class="success-ring"></view>
     </view>
-    <text class="success-title serif">预约成功</text>
-    <text class="success-sub">期待在小森林与您相遇</text>
+    <text class="success-title serif">{{uiText.successTitle}}</text>
+    <text class="success-sub">{{uiText.successSubtitle}}</text>
     <view class="success-card">
       <view class="success-grid">
         <view class="sg">
@@ -157,11 +166,11 @@
         </view>
       </view>
       <view class="success-foot">
-        <text class="success-note">📍 {{storeAddress}} · 请按时到店</text>
+        <text class="success-note">📍 {{storeAddress}} · {{uiText.successAddressHint}}</text>
       </view>
     </view>
     <view class="success-notice">
-      <text class="success-notice-title serif">到店请留意</text>
+      <text class="success-notice-title serif">{{uiText.successNoticeTitle}}</text>
       <text wx:for="{{successNoticeLines}}" wx:key="*this" class="success-notice-line">{{item}}</text>
     </view>
     <view class="btn success-btn" bindtap="onReset">
@@ -173,7 +182,30 @@
     show="{{showCalendar}}"
     selectedTs="{{selectedTs}}"
     closedWeekdays="{{closedWeekdays}}"
+    bookingAdvanceDays="{{bookingAdvanceDays}}"
     bind:select="onCalendarSelect"
     bind:close="onCloseCalendar"
   />
+  <login-consent uiText="{{uiText}}" id="login-consent" bindvisibilitychange="onLoginConsentVisibility" />
+  <view wx:if="{{showPhonePrompt}}" class="phone-mask" catchtouchmove="noop">
+    <view class="phone-dialog" catchtap="noop">
+      <text class="phone-title">{{uiText.phonePromptTitle}}</text>
+      <text class="phone-description">{{uiText.phonePromptDescription}}</text>
+      <view class="phone-actions">
+        <button class="phone-button ghost" bindtap="onClosePhonePrompt" disabled="{{gettingPhone}}">{{uiText.phoneManualText}}</button>
+        <button class="phone-button solid" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber" loading="{{gettingPhone}}" disabled="{{gettingPhone}}">{{uiText.phoneAuthorizeText}}</button>
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{showPrivacy}}" class="phone-mask privacy-mask" catchtouchmove="noop">
+    <view class="phone-dialog" catchtap="noop">
+      <text class="phone-title">{{uiText.privacyTitle}}</text>
+      <text class="phone-description">{{uiText.reservePrivacyDescription}}</text>
+      <view class="phone-policy" bindtap="onOpenPrivacy">{{uiText.privacyLinkText}}</view>
+      <view class="phone-actions">
+        <button class="phone-button ghost" bindtap="onRejectPrivacy">暂不授权</button>
+        <button id="agree-reserve-privacy" class="phone-button solid" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="onAgreePrivacy">同意</button>
+      </view>
+    </view>
+  </view>
 </view>

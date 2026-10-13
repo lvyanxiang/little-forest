@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "config:env": "node scripts/generate-env.cjs",
+    "prepare": "npm run config:env"
   },
   "keywords": [],
   "author": "",

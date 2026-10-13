@@ -1,10 +1,11 @@
 import { ApiSlot, createBooking, fetchMyBookings, fetchSlots } from '../../utils/booking'
 import { addDays, diffDays, formatFullDate, formatShortDate, formatWeekday, startOfToday, toDateKey, weekdayOf } from '../../utils/date'
 import { getLayoutMetrics } from '../../utils/layout'
-import { FALLBACK_STORE, fetchStore, type StoreInfo } from '../../utils/store'
+import { fetchStore, type StoreInfo } from '../../utils/store'
 import { syncTabBar } from '../../utils/tab'
 import { getSession } from '../../utils/session'
-import { openPrivacyContract } from '../../utils/privacy'
+import { finishPrivacyAuthorization, openPrivacyContract } from '../../utils/privacy'
+import { ensureWechatLogin, fetchWechatPhoneNumber } from '../../utils/auth'
 
 type ResvStep = 'pick' | 'form' | 'success'
 
@@ -37,9 +38,9 @@ interface SlotView {
   showShimmer: boolean
 }
 
-function buildQuickDates(selectedTs: number, closedWeekdays: number[]): DateChip[] {
+function buildQuickDates(selectedTs: number, closedWeekdays: number[], quickDateDays: number): DateChip[] {
   const today = startOfToday()
-  return Array.from({ length: 14 }, (_, i) => {
+  return Array.from({ length: quickDateDays }, (_, i) => {
     const ts = addDays(today, i)
     return {
       ts,
@@ -114,59 +115,91 @@ Page({
     slots: [] as SlotView[],
     rawSlots: [] as ApiSlot[],
     dayClosed: false,
-    closedWeekdays: FALLBACK_STORE.closedWeekdays,
+    closedWeekdays: [] as number[],
     showCalendar: false,
+    showLoginConsent: false,
+    showPhonePrompt: false,
+    showPrivacy: false,
+    gettingPhone: false,
+    phoneRequestId: 0,
+    phoneError: '',
     name: '',
     phone: '',
     noticeRead: false,
+    privacyAgreed: false,
     noticeShake: false,
     fieldsReady: false,
     canSubmit: false,
     submitting: false,
+    enteringForm: false,
+    formUserId: '',
     successDate: '',
     pageBottom: 80,
-    noticeHeading: FALLBACK_STORE.noticeHeading,
-    noticeItems: FALLBACK_STORE.noticeItems,
-    noticeFoot: FALLBACK_STORE.noticeFoot,
-    successNoticeLines: FALLBACK_STORE.successNoticeLines,
-    storeAddress: FALLBACK_STORE.address,
+    noticeHeading: '',
+    noticeItems: [] as string[],
+    noticeFoot: '',
+    successNoticeLines: [] as string[],
+    storeAddress: '',
+    brandLogoUrl: '',
+    uiText: {} as Record<string, string>,
+    quickDateDays: 0, bookingAdvanceDays: 0,
+    storeReady: false, storeLoading: true, storeError: '',
   },
   onLoad() {
     this.setData({ pageBottom: getLayoutMetrics().tabBarHeight })
-    this.bootstrap()
   },
   onShow() {
-    syncTabBar(this, 1, this.data.showCalendar)
-    if (this.data.step === 'pick') {
-      this.refreshPick()
+    this.bootstrap()
+    if (this.data.formUserId && this.data.formUserId !== getSession()?.user.id) {
+      this.setData({ name: '', phone: '', noticeRead: false, privacyAgreed: false, fieldsReady: false, canSubmit: false, formUserId: '', step: 'pick', showPhonePrompt: false, gettingPhone: false, phoneError: '', phoneRequestId: this.data.phoneRequestId + 1 })
     }
+    this.syncTabs()
     fetchMyBookings()
-      .then(() => syncTabBar(this, 1, this.data.showCalendar))
+      .then(() => this.syncTabs())
       .catch(() => {})
   },
+  syncTabs() {
+    syncTabBar(this, 1, this.data.showCalendar || this.data.showLoginConsent || this.data.showPhonePrompt || this.data.showPrivacy)
+  },
+  onLoginConsentVisibility(event: WechatMiniprogram.CustomEvent<{ show: boolean }>) {
+    this.setData({ showLoginConsent: event.detail.show })
+    this.syncTabs()
+  },
   async bootstrap() {
+    this.setData({ storeLoading: true, storeError: '' })
     try {
       const store = await fetchStore()
       this.applyStore(store)
+      if (this.data.step === 'pick') await this.refreshPick()
     } catch {
-      this.applyStore(FALLBACK_STORE)
-    }
-    await this.refreshPick()
+      this.setData({ storeError: '预约配置加载失败，请重试' })
+    } finally { this.setData({ storeLoading: false }) }
   },
   applyStore(store: StoreInfo) {
+    if (diffDays(this.data.selectedTs, startOfToday()) > store.bookingAdvanceDays) {
+      this.setData({ selectedTs: startOfToday(), selectedSlot: null, selectedSlotLabel: '' })
+    }
+    const noticeChanged = this.data.noticeHeading !== store.noticeHeading || JSON.stringify(this.data.noticeItems) !== JSON.stringify(store.noticeItems) || this.data.noticeFoot !== store.noticeFoot
+    const privacyChanged = this.data.uiText.bookingPurposeText !== store.uiText.bookingPurposeText || this.data.uiText.bookingConsentSuffix !== store.uiText.bookingConsentSuffix
+    const noticeRead = !noticeChanged && this.data.noticeRead
+    const privacyAgreed = !privacyChanged && this.data.privacyAgreed
     this.setData({
       closedWeekdays: store.closedWeekdays,
       noticeHeading: store.noticeHeading,
       noticeItems: store.noticeItems,
       noticeFoot: store.noticeFoot,
       successNoticeLines: store.successNoticeLines,
-      storeAddress: store.address,
+      storeAddress: store.address, brandLogoUrl: store.brandLogoUrl, uiText: store.uiText,
+      quickDateDays: store.quickDateDays, bookingAdvanceDays: store.bookingAdvanceDays, storeReady: true,
+      noticeRead, privacyAgreed,
+      canSubmit: this.isFormReady(this.data.name, this.data.phone, noticeRead, privacyAgreed),
     })
   },
   async refreshPick() {
-    const { selectedTs, selectedSlot, closedWeekdays } = this.data
+    if (!this.data.storeReady) return
+    const { selectedTs, selectedSlot, closedWeekdays, quickDateDays, bookingAdvanceDays } = this.data
     const today = startOfToday()
-    const isQuickDate = diffDays(selectedTs, today) >= 0 && diffDays(selectedTs, today) < 14
+    const isQuickDate = diffDays(selectedTs, today) >= 0 && diffDays(selectedTs, today) < quickDateDays
     const dateKey = toDateKey(selectedTs)
     let rawSlots: ApiSlot[] = this.data.rawSlots
     let dayClosed = closedWeekdays.includes(weekdayOf(selectedTs))
@@ -184,7 +217,7 @@ Page({
         : null
     const selected = rawSlots.find((item) => item.id === nextSlot)
     this.setData({
-      quickDates: buildQuickDates(selectedTs, closedWeekdays),
+      quickDates: buildQuickDates(selectedTs, closedWeekdays, Math.min(quickDateDays, bookingAdvanceDays + 1)),
       rawSlots,
       slots: decorateSlots(rawSlots, nextSlot, dayClosed),
       selectedSlot: nextSlot,
@@ -233,30 +266,90 @@ Page({
       slots: decorateSlots(this.data.rawSlots, id, this.data.dayClosed),
     })
   },
-  onNext() {
-    const { selectedSlot, dayClosed, rawSlots } = this.data
-    if (!selectedSlot || dayClosed) return
+  async onNext() {
+    const { selectedSlot, selectedTs, dayClosed, rawSlots } = this.data
+    if (!this.data.storeReady || this.data.storeLoading || this.data.storeError || !selectedSlot || dayClosed || this.data.enteringForm) return
     const slot = rawSlots.find((item) => item.id === selectedSlot)
     if (!slot || slot.isFull || slot.isPast) return
-    const nickname = getSession()?.user.nickname
-    const name = this.data.name || (nickname && nickname !== '书友' ? nickname : '')
-    this.setData({
-      step: 'form',
-      name,
-      fieldsReady: this.isFieldsReady(name, this.data.phone),
-      canSubmit: this.isFormReady(name, this.data.phone, this.data.noticeRead),
-    })
+    this.setData({ enteringForm: true })
+    try {
+      const session = await ensureWechatLogin(true)
+      if (this.data.selectedSlot !== selectedSlot || this.data.selectedTs !== selectedTs || this.data.step !== 'pick') return
+      const sameUser = this.data.formUserId === session.user.id
+      const nickname = session.user.nickname
+      const name = (sameUser ? this.data.name : '') || (nickname && !session.user.isDefaultNickname ? nickname : '')
+      const phone = sameUser ? this.data.phone : ''
+      const noticeRead = sameUser && this.data.noticeRead
+      const privacyAgreed = sameUser && this.data.privacyAgreed
+      this.setData({
+        step: 'form', formUserId: session.user.id, name, phone, noticeRead, privacyAgreed,
+        showPhonePrompt: !phone, phoneError: '',
+        fieldsReady: this.isFieldsReady(name, phone),
+        canSubmit: this.isFormReady(name, phone, noticeRead, privacyAgreed),
+      })
+      this.syncTabs()
+    } catch (error) {
+      wx.showToast({ title: error instanceof Error ? error.message : '微信登录失败', icon: 'none' })
+    } finally { this.setData({ enteringForm: false }) }
   },
   onBackPick() {
-    this.setData({ step: 'pick' })
+    this.setData({ step: 'pick', showPhonePrompt: false, gettingPhone: false, phoneRequestId: this.data.phoneRequestId + 1 })
+    this.syncTabs()
     this.refreshPick()
   },
   onOpenPrivacy() { openPrivacyContract() },
-  isFieldsReady(name: string, phone: string) {
-    return Boolean(name.trim() && phone.trim())
+  onAgreePrivacy() {
+    finishPrivacyAuthorization(true, 'agree-reserve-privacy')
+    this.setData({ showPrivacy: false })
+    this.syncTabs()
   },
-  isFormReady(name: string, phone: string, noticeRead: boolean) {
-    return this.isFieldsReady(name, phone) && noticeRead
+  onRejectPrivacy() {
+    finishPrivacyAuthorization(false)
+    this.setData({ showPrivacy: false, showPhonePrompt: false })
+    this.syncTabs()
+  },
+  onClosePhonePrompt() {
+    if (this.data.gettingPhone) return
+    this.setData({ showPhonePrompt: false })
+    this.syncTabs()
+  },
+  async onGetPhoneNumber(event: WechatMiniprogram.CustomEvent<{ code?: string; errMsg?: string }>) {
+    if (this.data.gettingPhone || this.data.step !== 'form') return
+    if (!event.detail.code) {
+      this.setData({ showPhonePrompt: false, phoneError: '未获取微信手机号，请手动填写。' })
+      this.syncTabs()
+      return
+    }
+    const session = getSession()
+    if (!session || this.data.formUserId !== session.user.id) {
+      wx.showToast({ title: '请重新登录后填写预约信息', icon: 'none' })
+      return
+    }
+    const requestId = this.data.phoneRequestId + 1
+    const phoneAtStart = this.data.phone
+    this.setData({ gettingPhone: true, phoneError: '', phoneRequestId: requestId })
+    try {
+      const phone = await fetchWechatPhoneNumber(event.detail.code)
+      if (this.data.phoneRequestId !== requestId || this.data.step !== 'form' || this.data.formUserId !== session.user.id || this.data.phone !== phoneAtStart) return
+      this.setData({
+        phone, showPhonePrompt: false,
+        fieldsReady: this.isFieldsReady(this.data.name, phone),
+        canSubmit: this.isFormReady(this.data.name, phone, this.data.noticeRead, this.data.privacyAgreed),
+      })
+    } catch (error) {
+      if (this.data.phoneRequestId === requestId && this.data.formUserId === session.user.id) {
+        this.setData({ showPhonePrompt: false, phoneError: error instanceof Error ? error.message : '微信手机号暂不可用，请手动填写。' })
+      }
+    } finally {
+      if (this.data.phoneRequestId === requestId) this.setData({ gettingPhone: false })
+      this.syncTabs()
+    }
+  },
+  isFieldsReady(name: string, phone: string) {
+    return Boolean(name.trim() && /^1\d{10}$/.test(phone.trim()))
+  },
+  isFormReady(name: string, phone: string, noticeRead: boolean, privacyAgreed: boolean) {
+    return this.isFieldsReady(name, phone) && noticeRead && privacyAgreed
   },
   shakeNotice() {
     if (noticeShakeTimer) {
@@ -283,15 +376,16 @@ Page({
     this.setData({
       name,
       fieldsReady: this.isFieldsReady(name, this.data.phone),
-      canSubmit: this.isFormReady(name, this.data.phone, this.data.noticeRead),
+      canSubmit: this.isFormReady(name, this.data.phone, this.data.noticeRead, this.data.privacyAgreed),
     })
   },
   onPhoneInput(e: WechatMiniprogram.Input) {
     const phone = e.detail.value
     this.setData({
       phone,
+      phoneError: '',
       fieldsReady: this.isFieldsReady(this.data.name, phone),
-      canSubmit: this.isFormReady(this.data.name, phone, this.data.noticeRead),
+      canSubmit: this.isFormReady(this.data.name, phone, this.data.noticeRead, this.data.privacyAgreed),
     })
   },
   onToggleNotice() {
@@ -299,13 +393,30 @@ Page({
     this.setData({
       noticeRead,
       noticeShake: false,
-      canSubmit: this.isFormReady(this.data.name, this.data.phone, noticeRead),
+      canSubmit: this.isFormReady(this.data.name, this.data.phone, noticeRead, this.data.privacyAgreed),
+    })
+  },
+  onTogglePrivacy() {
+    const privacyAgreed = !this.data.privacyAgreed
+    this.setData({
+      privacyAgreed,
+      canSubmit: this.isFormReady(this.data.name, this.data.phone, this.data.noticeRead, privacyAgreed),
     })
   },
   async onConfirm() {
-    const { selectedSlot, selectedTs, name, phone, noticeRead, submitting, dayClosed } = this.data
+    if (!this.data.storeReady || this.data.storeLoading || this.data.storeError) {
+      wx.showToast({ title: '请先加载最新预约配置', icon: 'none' })
+      return
+    }
+    const { selectedSlot, selectedTs, name, phone, noticeRead, privacyAgreed, submitting, dayClosed } = this.data
     const trimmedName = name.trim()
     const trimmedPhone = phone.trim()
+    if (submitting) return
+    if (this.data.formUserId !== getSession()?.user.id) {
+      this.setData({ step: 'pick', name: '', phone: '', noticeRead: false, privacyAgreed: false, fieldsReady: false, canSubmit: false, formUserId: '' })
+      wx.showToast({ title: '请重新登录后填写预约信息', icon: 'none' })
+      return
+    }
     if (!noticeRead) {
       this.shakeNotice()
     }
@@ -316,6 +427,11 @@ Page({
       return
     }
     if (!noticeRead || submitting) return
+    if (!privacyAgreed) {
+      wx.showToast({ title: '请阅读并同意隐私指引', icon: 'none' })
+      wx.pageScrollTo({ selector: '#privacy-check', offsetTop: -80, duration: 240 })
+      return
+    }
     if (!/^1\d{10}$/.test(trimmedPhone)) {
       wx.showToast({ title: '请输入正确的手机号', icon: 'none' })
       return
@@ -352,17 +468,28 @@ Page({
       name: '',
       phone: '',
       noticeRead: false,
+      privacyAgreed: false,
       noticeShake: false,
       fieldsReady: false,
       canSubmit: false,
       submitting: false,
+      formUserId: '',
+      showPhonePrompt: false,
+      gettingPhone: false,
+      phoneError: '',
+      phoneRequestId: this.data.phoneRequestId + 1,
     })
+    this.syncTabs()
     this.refreshPick()
   },
   onUnload() {
+    this.selectComponent('#login-consent')?.cancel()
+    if (this.data.showPrivacy) finishPrivacyAuthorization(false)
+    this.setData({ phoneRequestId: this.data.phoneRequestId + 1 })
     if (noticeShakeTimer) {
       clearTimeout(noticeShakeTimer)
       noticeShakeTimer = null
     }
   },
+  noop() {},
 })

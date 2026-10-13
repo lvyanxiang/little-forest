@@ -45,6 +45,11 @@ export class WechatService {
     };
   }
 
+  phoneNumber(code: string) {
+    // Only return the authorized number for the booking form; save it when the booking is submitted.
+    return this.gateway.exchangePhoneCode(code);
+  }
+
   async authenticate(authorization?: string) {
     const token = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(authorization || '')?.[1];
     if (!token) throw new UnauthorizedException('请先微信登录');
@@ -66,13 +71,17 @@ export class WechatService {
     return {
       id: user.id,
       nickname: user.nickname,
+      isDefaultNickname: user.nickname === '书友',
       hasAvatar: Boolean(image?.hasAvatar),
       updatedAt: user.updatedAt.toISOString(),
     };
   }
 
-  async updateProfile(userId: string, nickname: string, file?: AvatarUpload) {
-    const patch: Partial<WechatUser> = { nickname };
+  async updateProfile(userId: string, nickname?: string, file?: AvatarUpload) {
+    if (nickname === undefined && !file)
+      throw new BadRequestException('请选择头像或填写昵称');
+    const patch: Partial<WechatUser> = {};
+    if (nickname !== undefined) patch.nickname = nickname;
     if (file) {
       const mime = this.imageType(file.buffer);
       if (!mime)

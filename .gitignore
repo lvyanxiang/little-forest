@@ -13,3 +13,4 @@ weapp/project.private.config.json
 .env.*
 !.env.example
 !.env.*.example
+weapp/miniprogram/utils/env.generated.ts

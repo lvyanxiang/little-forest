@@ -1,11 +1,10 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
 import { api } from '../api'
 
-const DEFAULT_IMAGE = '/home-default.jpg'
-
 export function HomePage() {
   const [heroText, setHeroText] = useState('')
-  const [imageUrl, setImageUrl] = useState(DEFAULT_IMAGE)
+  const [imageUrl, setImageUrl] = useState('')
+  const [brandUrl, setBrandUrl] = useState('')
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -15,21 +14,23 @@ export function HomePage() {
       .getStore()
       .then((store) => {
         setHeroText(store.homeHeroText)
-        setImageUrl(store.homeHeroImageUrl || DEFAULT_IMAGE)
+        setImageUrl(store.homeHeroImageUrl)
+        setBrandUrl(store.brandLogoUrl)
       })
       .catch((err: Error) => setMessage(err.message))
   }, [])
 
-  async function onUpload(event: ChangeEvent<HTMLInputElement>) {
+  async function onUpload(event: ChangeEvent<HTMLInputElement>, brand = false) {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
     setUploading(true)
     setMessage('')
     try {
-      const store = await api.uploadHomeImage(file)
-      setImageUrl(`${store.homeHeroImageUrl}?v=${Date.now()}`)
-      setMessage('首页图片已更新')
+      const store = await (brand ? api.uploadBrandImage(file) : api.uploadHomeImage(file))
+      if (brand) setBrandUrl(`${store.brandLogoUrl}?v=${Date.now()}`)
+      else setImageUrl(`${store.homeHeroImageUrl}?v=${Date.now()}`)
+      setMessage(brand ? '品牌图片已更新' : '首页图片已更新')
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '上传失败')
     } finally {
@@ -58,7 +59,7 @@ export function HomePage() {
       <div className="grid gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
         <div className="grid content-start gap-3">
           <div className="aspect-[404/967] overflow-hidden rounded-2xl border border-line bg-cream">
-            <img className="h-full w-full object-cover" src={imageUrl} alt="小程序首页预览" />
+            {imageUrl && <img className="h-full w-full object-cover" src={imageUrl} alt="小程序首页预览" />}
           </div>
           <label className="cursor-pointer rounded-[10px] bg-forest px-4 py-2 text-center text-sm text-cream">
             {uploading ? '上传中…' : '更换首页图片'}
@@ -67,8 +68,15 @@ export function HomePage() {
               type="file"
               accept="image/jpeg,image/png,image/webp"
               disabled={uploading}
-              onChange={onUpload}
+              onChange={(event) => onUpload(event)}
             />
+          </label>
+          <div className="aspect-[2/1] overflow-hidden rounded-xl border border-line bg-cream">
+            {brandUrl && <img className="h-full w-full object-contain" src={brandUrl} alt="品牌图片预览" />}
+          </div>
+          <label className="cursor-pointer rounded-[10px] bg-forest px-4 py-2 text-center text-sm text-cream">
+            {uploading ? '上传中…' : '更换品牌图片'}
+            <input className="hidden" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={(event) => onUpload(event, true)} />
           </label>
         </div>
         <div className="grid content-start gap-4">

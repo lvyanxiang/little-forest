@@ -1,12 +1,22 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { MINI_PROGRAM_TEXT_LABELS } from './mini-program-text';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StoreSetting } from './store-setting.entity';
 import type { UpdateStoreDto } from './dto/update-store.dto';
+import { todayKey, toDateKey } from '../common/time';
 
 export type StorePayload = Pick<
   StoreSetting,
   | 'id'
+  | 'name'
+  | 'quickDateDays'
+  | 'bookingAdvanceDays'
+  | 'uiText'
   | 'address'
   | 'closedWeekdays'
   | 'noticeHeading'
@@ -16,6 +26,8 @@ export type StorePayload = Pick<
   | 'successNoticeLines'
 > & {
   homeHeroImageUrl: string;
+  brandLogoUrl: string;
+  uiTextLabels: Record<string, string>;
 };
 
 export type HomeHeroUpload = {
@@ -23,65 +35,54 @@ export type HomeHeroUpload = {
   buffer: Buffer;
 };
 
-const DEFAULT_STORE: Omit<StoreSetting, 'id'> = {
-  name: '小森林书店',
-  address: '上海市长宁区延安西路1221号泛太大厦2号楼1层底商',
-  latitude: 31.22048,
-  longitude: 121.42516,
-  phone: '18017251036',
-  hours: '周二至周日 14:00 – 21:00（周一闭馆）',
-  closedWeekdays: [1],
-  noticeHeading: '小森林庇护所注意事项',
-  noticeItems: [
-    '我们是自助无人值守空间，不是绝对安静的自习室，不习惯有白噪音的客人请慎入。',
-    '空间内难免有讨论、走动、音乐播放、键盘敲击等声音，无法做到图书馆一样的安静，请务必慎入。',
-    '阅读完的书请放回书架。',
-    '椅子多是欧洲中古家具或设计师家具，请务必爱护。',
-    '离开时请关掉台灯，垃圾请丢到水台旁红色大垃圾桶。',
-    '水杯可放在水池内，志愿者会定时清洗消毒。',
-    '纯净水（冰、热）在水台旁，可自取。',
-    'Wi-Fi 名称：377film　密码：xiaosenlinlin',
-    '意见或建议请到小红书私信「小森林」，我们会及时回复。',
-  ],
-  noticeFoot: '请和我们一样，爱护爱惜这个空间。谢谢。',
-  homeNoticeText:
-    '自助无人值守，不是绝对安静的自习室，店内可能有交谈、音乐与走动，请先确认是否适合，书看完请放回书架，离开时关台灯、垃圾入桶',
-  homeHeroText: '讀著書\n一輩子很快就過去了\n去讀書吧\n讀一句\n便經歷一句',
-  homeHeroImage: null,
-  successNoticeLines: [
-    'Wi-Fi：377film　密码 xiaosenlinlin',
-    '书看完请放回书架，离开时关掉台灯',
-    '垃圾请丢到水台旁红色大垃圾桶',
-  ],
-};
-
 @Injectable()
-export class StoreService implements OnModuleInit {
+export class StoreService {
   constructor(
     @InjectRepository(StoreSetting)
     private readonly repo: Repository<StoreSetting>,
   ) {}
 
-  async onModuleInit() {
-    await this.ensureDefault();
-  }
-
-  async ensureDefault() {
-    const exists = await this.repo.findOne({ where: { id: 1 } });
-    if (exists) return exists;
-    return this.repo.save(this.repo.create({ id: 1, ...DEFAULT_STORE }));
+  async ensureConfigured() {
+    const store = await this.repo.findOne({ where: { id: 1 } });
+    if (
+      !store ||
+      store.quickDateDays < 1 ||
+      store.bookingAdvanceDays < 1 ||
+      Object.keys(MINI_PROGRAM_TEXT_LABELS).some(
+        (key) =>
+          typeof store.uiText?.[key] !== 'string' || !store.uiText[key].trim(),
+      )
+    ) {
+      throw new ServiceUnavailableException('门店配置尚未就绪，请稍后重试');
+    }
+    return store;
   }
 
   async getPublic(): Promise<StorePayload> {
-    const store = await this.ensureDefault();
+    const store = await this.ensureConfigured();
     const imageState = await this.repo
       .createQueryBuilder('store')
       .select('store.homeHeroImage IS NOT NULL', 'hasImage')
+      .addSelect('store.brandLogoImage IS NOT NULL', 'hasLogo')
       .where('store.id = :id', { id: 1 })
-      .getRawOne<{ hasImage: boolean }>();
+      .getRawOne<{ hasImage: boolean; hasLogo: boolean }>();
     return this.toPayload(store, {
       homeHeroImageUrl: imageState?.hasImage ? '/api/store/home-image' : '',
+      brandLogoUrl: imageState?.hasLogo ? '/api/store/brand-image' : '',
     });
+  }
+
+  assertBookingDate(date: string, advanceDays: number) {
+    const [year, month, day] = date.split('-').map(Number);
+    const value = new Date(year, month - 1, day);
+    const max = new Date();
+    max.setDate(max.getDate() + advanceDays);
+    if (
+      toDateKey(value.getTime()) !== date ||
+      date < todayKey() ||
+      date > toDateKey(max.getTime())
+    )
+      throw new BadRequestException('日期不在可预约范围内，请重新选择');
   }
 
   private toPayload(
@@ -90,6 +91,12 @@ export class StoreService implements OnModuleInit {
   ): StorePayload {
     return {
       id: store.id,
+      name: store.name,
+      quickDateDays: store.quickDateDays,
+      bookingAdvanceDays: store.bookingAdvanceDays,
+      uiText: store.uiText,
+      uiTextLabels: MINI_PROGRAM_TEXT_LABELS,
+      brandLogoUrl: store.brandLogoImage ? '/api/store/brand-image' : '',
       address: store.address,
       closedWeekdays: store.closedWeekdays,
       noticeHeading: store.noticeHeading,
@@ -102,31 +109,59 @@ export class StoreService implements OnModuleInit {
     };
   }
 
-  async getHomeHeroImage() {
+  async getHomeHeroImage(
+    field: 'homeHeroImage' | 'brandLogoImage' = 'homeHeroImage',
+  ) {
     const store = await this.repo
       .createQueryBuilder('store')
-      .addSelect('store.homeHeroImage')
+      .addSelect(`store.${field}`)
       .where('store.id = :id', { id: 1 })
       .getOne();
-    const value = store?.homeHeroImage || '';
+    const value = store?.[field] || '';
     const matched = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(value);
     if (!matched) return null;
     return { mimeType: matched[1], data: Buffer.from(matched[2], 'base64') };
   }
 
-  async updateHomeHeroImage(file: HomeHeroUpload): Promise<StorePayload> {
+  async updateHomeHeroImage(
+    file: HomeHeroUpload,
+    field: 'homeHeroImage' | 'brandLogoImage' = 'homeHeroImage',
+  ): Promise<StorePayload> {
     const store = await this.repo
       .createQueryBuilder('store')
-      .addSelect('store.homeHeroImage')
+      .addSelect(`store.${field}`)
       .where('store.id = :id', { id: 1 })
       .getOne();
-    const target = store || (await this.ensureDefault());
-    target.homeHeroImage = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-    return this.toPayload(await this.repo.save(target));
+    const target = store || (await this.ensureConfigured());
+    target[field] =
+      `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    await this.repo.save(target);
+    return this.getPublic();
   }
 
   async update(payload: UpdateStoreDto): Promise<StorePayload> {
-    const store = await this.ensureDefault();
+    const store = await this.ensureConfigured();
+    const quick = payload.quickDateDays ?? store.quickDateDays;
+    const advance = payload.bookingAdvanceDays ?? store.bookingAdvanceDays;
+    if (quick > advance + 1)
+      throw new BadRequestException('快捷日期数量不能超过可预约日期范围');
+    if (payload.uiText) {
+      for (const [key, value] of Object.entries(payload.uiText)) {
+        if (
+          !Object.prototype.hasOwnProperty.call(
+            MINI_PROGRAM_TEXT_LABELS,
+            key,
+          ) ||
+          typeof value !== 'string' ||
+          !value.trim() ||
+          value.length > 2000
+        )
+          throw new BadRequestException(
+            '小程序文案包含未知项目、空值或超长内容',
+          );
+      }
+      payload.uiText = { ...store.uiText, ...payload.uiText };
+    }
     if (payload.closedWeekdays) {
       payload.closedWeekdays = [...new Set(payload.closedWeekdays)]
         .map(Number)
@@ -149,7 +184,7 @@ export class StoreService implements OnModuleInit {
         Object.entries(payload).filter(([, value]) => value !== undefined),
       ),
     );
-    const saved = await this.repo.save(store);
-    return this.toPayload(saved);
+    await this.repo.save(store);
+    return this.getPublic();
   }
 }

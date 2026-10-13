@@ -1,5 +1,3 @@
-import { NOTICE_ITEMS } from '../../utils/notice'
-
 Component({
   properties: {
     show: {
@@ -10,16 +8,16 @@ Component({
       type: Boolean,
       value: true,
     },
-    title: { type: String, value: '预约须知' },
-    intro: { type: String, value: '请阅读以下内容。点击「同意并继续」即表示同意全部条款。' },
+    title: { type: String, value: '' },
+    intro: { type: String, value: '' },
     heading: { type: String, value: '' },
     items: { type: Array, value: [] },
     foot: { type: String, value: '' },
-    confirmText: { type: String, value: '同意并继续' },
+    confirmText: { type: String, value: '' },
     showRemember: { type: Boolean, value: true },
     showCancel: { type: Boolean, value: true },
   },
-  data: { fallbackItems: NOTICE_ITEMS },
+
   methods: {
     onToggleRemember() {
       this.triggerEvent('rememberchange', { remember: !this.properties.remember })

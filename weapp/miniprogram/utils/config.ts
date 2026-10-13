@@ -1,8 +1,14 @@
-// Development tools use the local backend; trial/release must use a real HTTPS API.
-export const DEVELOP_API_BASE = 'http://127.0.0.1:3001/api'
-export const PRODUCTION_API_BASE = '' // e.g. https://api.your-domain.cn/api
+import { DEVELOP_API_BASE, PRODUCTION_API_BASE } from './env.generated'
+
+export { DEVELOP_API_BASE, PRODUCTION_API_BASE } from './env.generated'
+
 const version = wx.getAccountInfoSync().miniProgram.envVersion
-export const API_BASE = version === 'develop' ? DEVELOP_API_BASE : PRODUCTION_API_BASE
+const deviceApi = wx as typeof wx & { getDeviceInfo?: () => { platform: string } }
+const platform = deviceApi.getDeviceInfo ? deviceApi.getDeviceInfo().platform : wx.getSystemInfoSync().platform
+
+// Only the local development simulator can reach the computer's loopback address.
+// Phone previews and uploaded versions always use the production API.
+export const API_BASE = version === 'develop' && platform === 'devtools' ? DEVELOP_API_BASE : PRODUCTION_API_BASE
 
 export function resolveApiAsset(path: string) {
   if (!path) return ''

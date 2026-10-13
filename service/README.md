@@ -71,3 +71,9 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+## First run and business configuration
+
+Run `npm run db:init` before starting this version. It applies schema migrations and then `init/init.sql`, which contains the initial store settings, text, media and slots. The script is idempotent and preserves existing customizations and records. Start-up does not seed business data automatically.
+
+When using Docker, run `docker compose --env-file .env.production run --rm --no-deps service npm run db:init` before updating the running containers.

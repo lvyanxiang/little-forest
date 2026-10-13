@@ -47,6 +47,7 @@ type ApiBooking = {
 }
 
 let cachedBookings: Booking[] = []
+let cachedUserId: string | null = null
 
 function toBooking(row: ApiBooking): Booking {
   return {
@@ -67,13 +68,16 @@ export async function fetchSlots(date: string) {
 }
 
 export async function fetchMyBookings() {
-  if (!getSession()) { cachedBookings = []; return cachedBookings }
+  const session = getSession()
+  if (!session) { cachedBookings = []; cachedUserId = null; return cachedBookings }
   try {
     const rows = await request<ApiBooking[]>('/bookings', 'GET', undefined, true)
+    if (getSession()?.token !== session.token) throw new Error('登录状态已变化，请重试')
+    cachedUserId = session.user.id
     cachedBookings = rows.map(toBooking)
     return cachedBookings
   } catch (error) {
-    cachedBookings = []
+    if (getSession()?.token === session.token || !getSession()) { cachedBookings = []; cachedUserId = null }
     throw error
   }
 }
@@ -85,7 +89,8 @@ export async function createBooking(input: {
   phone: string
   people?: number
 }) {
-  await ensureWechatLogin()
+  const session = await ensureWechatLogin()
+  if (getSession()?.token !== session.token) throw new Error('登录状态已变化，请重试')
   const row = await request<ApiBooking>('/bookings', 'POST', {
     visitDate: input.visitDate,
     slotId: input.slotId,
@@ -93,20 +98,25 @@ export async function createBooking(input: {
     phone: input.phone,
     people: input.people ?? 1,
   }, true)
+  if (getSession()?.token !== session.token) throw new Error('登录状态已变化，请重试')
   const booking = toBooking(row)
-  cachedBookings = [booking, ...cachedBookings.filter((item) => item.id !== booking.id)]
+  cachedBookings = [booking, ...getBookings().filter((item) => item.id !== booking.id)]
+  cachedUserId = session.user.id
   return booking
 }
 
 export async function cancelBooking(id: string) {
+  const session = getSession()
   const row = await request<ApiBooking>(`/bookings/${id}/cancel`, 'POST', undefined, true)
+  if (getSession()?.token !== session?.token) throw new Error('登录状态已变化，请重试')
   const booking = toBooking(row)
-  cachedBookings = cachedBookings.map((item) => (item.id === id ? booking : item))
+  cachedBookings = getBookings().map((item) => (item.id === id ? booking : item))
   return booking
 }
 
 export function getBookings() {
-  if (!getSession()) cachedBookings = []
+  const userId = getSession()?.user.id || null
+  if (!userId || userId !== cachedUserId) { cachedBookings = []; cachedUserId = userId }
   return cachedBookings
 }
 

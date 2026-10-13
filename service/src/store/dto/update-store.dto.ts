@@ -4,11 +4,35 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsInt,
+  IsObject,
+  MinLength,
   Max,
   Min,
 } from 'class-validator';
 
 export class UpdateStoreDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  name?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  quickDateDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(3650)
+  bookingAdvanceDays?: number;
+
+  @IsOptional()
+  @IsObject()
+  uiText?: Record<string, string>;
+
   @IsOptional()
   @IsString()
   address?: string;

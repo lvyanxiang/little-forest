@@ -1,5 +1,9 @@
 # 微信用户与后台内容同步
 
+## 当前状态（2026-10-13）
+
+负责人已确认：认证均通过，公众平台配置和隐私指引已填写完成，目前只剩小程序版本上传、提审和发布。下文的平台配置与服务器部署步骤保留作为维护参考，不再作为未完成的认证待办。版本状态见 [上线准备清单.md](./上线准备清单.md)。
+
 ## 已实现的内容
 
 后台配置现在对应小程序的实际页面：
@@ -14,13 +18,23 @@
 | 时段时间、名额、排序、上下线 | 预约页时段列表及剩余名额 |
 | 预约记录 | 「我的」即将到来、历史记录 |
 
-后台已移除未展示的店名、门店电话、营业时间、地图及坐标配置，移除预约记录中的人数展示。历史数据库字段和业务记录保留，不执行删库或清空数据。接口不再返回这些废弃门店配置。
+门店名称用于小程序导航标题，可在后台修改；后台已移除未展示的门店电话、营业时间、地图及坐标配置，并移除预约记录中的人数展示。历史数据库字段和业务记录保留，不执行删库或清空数据。接口不再返回这些废弃门店配置。
 
 「我的」支持微信登录、完善头像昵称、退出登录和预约历史。登录采用 `wx.login` → 服务端 `code2Session` → 本项目会话，默认会话有效期 30 天；服务端仅存会话令牌摘要，AppSecret、OpenID、session_key 不下发到小程序。头像由用户通过 `chooseAvatar` 选择，昵称通过 `input type="nickname"` 填写，不调用旧版 `getUserProfile`。头像上限 2MB，保存到 PostgreSQL，并通过需要登录的接口读取。
 
-预约表单仍由用户填写姓名和手机号。微信身份登录不会自动取得手机号，本次没有接入微信手机号获取能力。已填写的昵称可以预填预约姓名，用户仍可修改。
+预约姓名由用户填写，已填写的昵称可以预填姓名，用户仍可修改。微信身份登录不会自动取得手机号；进入预约表单时，若手机号为空，会显示「快捷填写手机号」，用户点击「使用微信手机号」并授权后自动填入手机号输入框，也可选择手动填写。授权的号码只填入当前表单，提交预约后才保存到预约记录，不单独持久化为账号资料。
 
-## 你需要完成的操作
+### 用户操作流程
+
+- 预约：选择日期和时段 → 下一步 → 未登录或登录过期时主动勾选隐私同意后登录（可打开指引查看） → 授权微信手机号并自动填入（可跳过并手填）→ 填写姓名 → 确认到店须知、单独勾选预约隐私同意 → 确认预约。进入表单前校验已有登录会话；昵称可预填姓名，姓名允许修改。
+- 个人资料：「我的」→ 微信登录 → 主动勾选隐私同意（可打开指引查看）→ 同意并登录。首次使用默认资料的用户会看到可跳过的资料编辑窗口；已登录用户可点击头像或「完善头像昵称」，选择微信头像并填写微信昵称。修改昵称后需等待微信昵称审核完成才能保存。
+- 预约同步：记录关联到服务器验证的微信用户身份。在「我的」查看和取消自己的预约；退出登录或换账号后清除旧账号的预约缓存和表单联系信息。
+
+头像昵称采用 `chooseAvatar` 和 `input type="nickname"`，由用户主动选择和填写，参见 [微信官方头像昵称组件](https://github.com/wechat-miniprogram/mp-user-avatar)。头像昵称不作为预约的必填条件。
+
+头像与微信身份登录分别处理。用户在「我的」点击头像进入资料编辑，选择头像后点击「保存」，上传到 `wechat_users.avatar`；可以只换头像，保留原昵称或默认昵称。页面从需要登录的 `/api/wechat/avatar` 读取数据库图片，并按资料更新时间刷新缓存。头像保存成功后立即显示；下载失败时保留可用预览并提供重试入口。重新进入或重新登录后读取数据库，较早的加载响应不会覆盖后来保存的头像。编辑窗口中的头像选择按钮固定等宽等高并圆形裁切。这些头像修复不增加数据库字段。
+
+## 配置与部署参考
 
 ### 1. 核对 AppID，取得 AppSecret
 
@@ -42,22 +56,57 @@ SERVICE_PORT=3000
 
 在 1Panel 将 API 域名反向代理到后端实际宿主机端口，并配置有效的 HTTPS 证书。代理需要保留 `/api/` 前缀，上传大小至少 `6m`。
 
-编辑 `weapp/miniprogram/utils/config.ts`：
+编辑 `weapp/.env.development` 和 `weapp/.env.production`（首次可复制对应的 `.example` 文件）：
 
-```typescript
-export const DEVELOP_API_BASE = 'http://127.0.0.1:3001/api'
-export const PRODUCTION_API_BASE = 'https://你的API域名/api'
+```dotenv
+# .env.development：开发者工具模拟器
+API_BASE=http://127.0.0.1:3001/api
+# .env.production：手机预览、体验版、正式版
+API_BASE=https://你的API域名/api
 ```
 
-开发版使用 `DEVELOP_API_BASE`；体验版和正式版使用 `PRODUCTION_API_BASE`。本地后端若改为 3000，开发地址也改为 3000。真机开发版的 `127.0.0.1` 指向手机自身，真机测试时将开发地址改为可访问的 HTTPS API 地址。
+修改后执行 `npm run config:env --prefix weapp`，重新编译、预览或上传。生成的 `env.generated.ts` 不提交 Git，不直接编辑。仅开发版模拟器使用开发地址；手机预览、体验版和正式版均使用生产地址。本地后端若改为 3000，开发地址也改为 3000。
 
 在微信公众平台将同一 API 域名配置为 `request`、`uploadFile`、`downloadFile` 合法域名。平台的合法域名填写域名，例如 `https://api.example.cn`，不带 `/api`。图片上传和登录后的头像下载都使用该域名；首页图片也需要确保可在真机加载。
 
+#### 真机请求失败的排查
+
+先从电脑或手机浏览器访问 `https://你的API域名/api/health`，预期 HTTP 200，JSON 中 `ok` 为 `true`、`db` 为 `up`。也可执行：
+
+```bash
+curl -v --connect-timeout 10 --max-time 20 https://你的API域名/api/health
+curl -v --connect-timeout 10 --max-time 20 http://你的API域名/api/health
+```
+
+如果 HTTP 返回 `403`、`Server: Beaver`、`Non-compliance ICP Filing` 或 `aliyun.com/beian/beian-block`，说明域名访问被阿里云备案系统阻断。HTTPS 可能同时出现 `Connection reset by peer` / TLS 握手失败，此时还无法验证服务端证书。到阿里云核查域名的网站备案：未备案则申请网站备案；已在其他接入商备案则完成阿里云接入备案；已完成则向阿里云核查阻断原因。**微信小程序备案与域名网站备案是独立的**，只完成小程序备案不能解除域名阻断。参见 [阿里云备案阻断排查](https://help.aliyun.com/zh/icp-filing/basic-icp-service/support/web-site-suddenly-appeared-for-the-record-to-block-or-hang-and-so-on-and-so-forth)。
+
+历史排查记录：2026-10-12 曾在 `xiaosenlin.top` 观察到备案阻断页和 HTTPS 握手重置。该记录仅供同类故障排查；2026-10-13 负责人已确认认证和配置完成，不再将这条旧记录列为当前上线阻塞。
+
+小程序请求失败时，Console 会输出 `[API] request failed` 和微信原始 `errMsg`，用于区分域名校验、证书、超时和连接错误；不会输出请求数据或登录令牌。
+
 ### 3. 更新用户隐私保护指引
 
-在公众平台的用户隐私保护指引中声明实际收集内容和用途：账号标识用于登录及同步预约；用户主动选择的头像、填写的昵称用于个人资料；预约姓名和用户自行填写的手机号用于到店预约和联系。按平台提供的分类填写，并提供实际的联系 / 信息删除渠道。
+在公众平台的用户隐私保护指引中声明实际收集内容和用途：账号标识用于登录及同步预约；用户主动选择的头像、填写的昵称用于个人资料；预约姓名和用户授权微信获取或自行填写的手机号用于到店预约和联系。手机号用途可填写：「用于登记到店预约及必要的预约联系，手机号由用户授权获取或自行填写」。按平台提供的分类填写，并提供实际的联系 / 信息删除渠道。
 
-代码已添加隐私指引入口、头像隐私授权弹窗，以及 `agreePrivacyAuthorization` 同意按钮。微信平台上的隐私指引仍须由你配置，代码不能替代这一步。不选择头像昵称可以继续以默认「书友」身份预约。
+当前公众平台菜单入口：
+
+- 隐私指引：管理 → 账号设置 → 基本设置 → 服务内容声明 → 用户隐私保护指引 → 去完善 / 更新。
+- AppID、AppSecret：管理 → 开发管理 → 开发设置 → 开发者 ID。
+- HTTPS 域名：管理 → 开发管理 → 开发设置 → 服务器域名；配置 `request`、`uploadFile`、`downloadFile`。
+
+代码已接入：
+
+- 登录前统一告知账号标识与预约记录的用途。用户主动勾选并点击「同意并登录」后，才调用 `wx.login` 和后端登录接口；无需强制先打开指引。`wx.openPrivacyContract` 保留为查看入口，打开失败会提示，不阻止已勾选的登录。取消或离开页面不发起登录，新尝试默认不勾选。
+- 未勾选时点击「同意并登录」，同意项抖动并提示勾选；勾选后即可登录。
+- 提交预约前，单独勾选隐私同意，确认姓名和手机号用于登记预约及到店联系；与到店须知分别确认。点击政策链接不会切换勾选状态。新预约或换账号时清除同意状态。
+- 微信隐私接口授权保留 `wx.onNeedPrivacyAuthorization` 和 `agreePrivacyAuthorization` 官方按钮，按需用于完善头像昵称；不选择头像昵称可以继续以默认「书友」身份预约。
+- 预约页通过 `getPhoneNumber` 官方按钮获取独立的手机号授权 `code`，登录后的服务端 `/api/wechat/phone-number` 接口向微信兑换号码并填入表单。服务端使用 `stable_token` 获取并缓存凭证，失效时最多刷新重试一次；不会下发 AppSecret 或 `access_token`。拒绝授权、能力未开通或接口失败时都能手动填写，不会取消已完成的登录。当前预约支持中国大陆 11 位手机号。
+
+微信平台上的指引已由负责人确认填写完成；后续变更信息类型或用途时仍须在平台同步更新，代码不能代替平台填写。当前「退出登录」仅清除登录会话，不是注销账号；信息删除渠道需要填写真实可处理请求的联系方式。
+
+手机号能力配置维护：在公众平台核对手机号获取能力。主体资格、认证和计费按微信后台当前提示处理；只填写隐私指引不会自动开通手机号能力。服务端获取凭证需要公众平台允许服务器出口 IP：如启用了 IP 白名单，应加入实际服务器 IP。参见 [微信手机号快速验证组件](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/getPhoneNumber.html) 和 [服务端手机号兑换接口](https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-info/phone-number/getPhoneNumber.html)。
+
+手机号接口本身不增加用户表字段。当前服务端业务配置版本新增门店配置字段，部署需执行 `db:init`，再更新 `service`、`admin` 并重新编译上传小程序；无需增加微信环境变量。
 
 ### 4. 更新服务器和数据库
 
@@ -66,11 +115,11 @@ export const PRODUCTION_API_BASE = 'https://你的API域名/api'
 ```bash
 docker compose --env-file .env.production config --quiet
 docker compose --env-file .env.production build admin service
-docker compose --env-file .env.production run --rm --no-deps service npm run db:migrate
+docker compose --env-file .env.production run --rm --no-deps service npm run db:init
 docker compose --env-file .env.production up -d
 ```
 
-迁移创建 `wechat_users`、`wechat_sessions`，并给预约表增加 `userId`；它可重复运行。`up -d` 不会自动迁移，必须执行上述迁移命令。
+`db:init` 会执行所有未应用迁移（包括微信用户、会话、预约归属和服务端文案字段），再执行初始化 SQL。它可重复运行，保留现有记录和已编辑的配置；`up -d` 不会自动初始化，必须执行上述命令。
 
 后台 Nginx 当前转发到 `service:3000`；你的 Compose 后端内部端口必须与它一致。若部署使用 `SERVICE_PORT=3001`，需要同时修改 Nginx 的后端端口并重建 admin；如果仍使用 3000，保持现有配置即可。
 
@@ -81,9 +130,10 @@ docker compose --env-file .env.production up -d
 在体验版和真机检查：
 
 1. 未登录可以浏览首页、须知和时段。
-2. 「我的」点击微信登录，完善头像昵称；拒绝头像授权后仍能使用默认资料。
+2. 「我的」或预约下一步点击登录，检查指引可打开、同意默认不勾选、暂不登录不进入账号；直接勾选即可登录，并可完善头像昵称，拒绝头像授权后仍能使用默认资料。
 3. 关闭并重新进入小程序后，个人资料和当前微信账号的预约仍可恢复。
-4. 提交预约后「我的」出现记录，取消后名额释放；换另一个微信账号不会看到或取消第一个账号的预约。
+4. 未勾选预约隐私同意时不能提交；点击指引链接不改变勾选状态。同意并提交后「我的」出现记录，取消后名额释放；换另一个微信账号不会看到或取消第一个账号的预约，旧姓名、手机号和勾选状态不带入新账号。
+   - 进入空手机号的预约表单后出现快捷填写提示；微信授权成功会填入号码，拒绝、未开通或失败时仍可手填；用户手动修改的号码不会被迟到的授权响应覆盖。
 5. 在 admin 修改首页图片、文案、须知、地址、闭馆日期和时段，重新进入小程序核对展示。
 6. 退出登录后个人预约列表和角标清空，重新登录后恢复自己的记录。
 
@@ -95,7 +145,22 @@ docker compose --env-file .env.production up -d
 
 ## 验证范围
 
-接口测试使用模拟微信 `code2Session` 响应，真实 PostgreSQL 验证用户、私有头像、登录会话、预约归属、跨账号拒绝访问以及历史记录保留。真实微信登录、授权弹窗和体验版合法域名需要填写真实 AppSecret 并在真机完成验证。
+接口测试使用模拟微信 `code2Session`、手机号授权和凭证响应，真实 PostgreSQL 验证用户、私有头像、登录会话、预约归属、跨账号拒绝访问以及历史记录保留。真实微信登录、手机号权限、授权弹窗和体验版合法域名需要填写真实 AppSecret 并在真机完成验证。
+
+客户端回归测试覆盖登录同意前不调用微信或后端、无需查看指引即可勾选登录、未勾选时显示抖动与提示、指引打不开不阻止已勾选的登录、离开页面取消与重试重置勾选、打开指引时保留弹窗、微信手机号授权成功预填、拒绝/失败时手填、迟到响应不覆盖手填或新账号、预约单独同意后才上传联系信息，以及登录合并、过期重新登录、网络失败保留会话、退出期间登录响应失效、跨账号头像与预约缓存隔离、登录前置与昵称预填、取消登录保留时段、昵称审核和账号变化时阻止提交。执行：
+
+```bash
+cd service
+npm run test:e2e -- --runInBand --watchman=false 'wechat.e2e-spec.ts|weapp-client.e2e-spec.ts'
+```
+
+后端测试需要本机测试 PostgreSQL 和 `service/.env` 数据库配置；客户端测试使用模拟的微信 API，不连接微信或公网服务。后端测试使用独立临时时段并在结束时清理自身数据。
+
+手机号兑换和接口登录保护也有独立测试，可在不连接 PostgreSQL 的情况下运行：
+
+```bash
+npm run test --prefix service -- --runInBand --watchman=false 'wechat.gateway.spec.ts|wechat-phone.spec.ts'
+```
 
 ## 官方参考
 
@@ -103,3 +168,9 @@ docker compose --env-file .env.production up -d
 - [code2Session](https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-login/code2Session.html)
 - [微信官方头像昵称组件说明](https://github.com/wechat-miniprogram/mp-user-avatar)
 - [用户隐私保护指引与授权](https://developers.weixin.qq.com/miniprogram/dev/framework/user-privacy/PrivacyAuthorize.html)
+
+## 业务内容改由服务端管理
+
+小程序不再内置门店地址、须知、Wi-Fi 信息、首页默认图、业务文案和固定预约日期范围。它们从 `/api/store` 读取，首次数据在 `service/init/init.sql`；接口失败时显示重试入口，冷启动不会用本地默认业务数据代替。常规按钮、加载/错误提示、样式、图标和程序逻辑保留在前端。
+
+后台新增「小程序文案」编辑登录、隐私、手机号、个人资料及成功提示；「预约设置」支持快捷日期数量和最多提前预约天数；「首页设置」可更换首页图及品牌图。页面每次进入时更新服务端配置，预约用途或须知变化会清除对应表单的旧勾选状态。

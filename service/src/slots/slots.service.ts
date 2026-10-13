@@ -1,22 +1,19 @@
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking } from '../bookings/booking.entity';
-import { formatSlotLabel, isSlotPast, timeToMinutes, weekdayOf } from '../common/time';
+import {
+  formatSlotLabel,
+  isSlotPast,
+  timeToMinutes,
+  weekdayOf,
+} from '../common/time';
 import { StoreService } from '../store/store.service';
 import { CreateSlotDto, UpdateSlotDto } from './dto/slot.dto';
 import { TimeSlot } from './time-slot.entity';
 
-const DEFAULT_SLOTS = [
-  { startTime: '14:00', endTime: '15:30', maxCapacity: 8, sortOrder: 1 },
-  { startTime: '15:30', endTime: '17:00', maxCapacity: 8, sortOrder: 2 },
-  { startTime: '17:00', endTime: '18:30', maxCapacity: 10, sortOrder: 3 },
-  { startTime: '18:30', endTime: '20:00', maxCapacity: 8, sortOrder: 4 },
-  { startTime: '20:00', endTime: '21:00', maxCapacity: 6, sortOrder: 5 },
-];
-
 @Injectable()
-export class SlotsService implements OnModuleInit {
+export class SlotsService {
   constructor(
     @InjectRepository(TimeSlot)
     private readonly slots: Repository<TimeSlot>,
@@ -24,10 +21,6 @@ export class SlotsService implements OnModuleInit {
     private readonly bookings: Repository<Booking>,
     private readonly storeService: StoreService,
   ) {}
-
-  async onModuleInit() {
-    await this.ensureDefault();
-  }
 
   async bookedPeople(date: string, slotId: number) {
     const raw = await this.bookings
@@ -40,18 +33,13 @@ export class SlotsService implements OnModuleInit {
     return Number(raw?.total ?? 0);
   }
 
-  async ensureDefault() {
-    const count = await this.slots.count();
-    if (count > 0) return;
-    await this.slots.save(DEFAULT_SLOTS.map((item) => this.slots.create(item)));
-  }
-
   listAdmin() {
     return this.slots.find({ order: { sortOrder: 'ASC', id: 'ASC' } });
   }
 
   async availability(date: string) {
     const store = await this.storeService.getPublic();
+    this.storeService.assertBookingDate(date, store.bookingAdvanceDays);
     const closed = store.closedWeekdays.includes(weekdayOf(date));
     const active = await this.slots.find({
       where: { isActive: true },
@@ -93,7 +81,10 @@ export class SlotsService implements OnModuleInit {
       throw new BadRequestException('排序数据重复');
     }
     const rows = await this.slots.find();
-    if (rows.length !== ids.length || ids.some((id) => !rows.some((row) => row.id === id))) {
+    if (
+      rows.length !== ids.length ||
+      ids.some((id) => !rows.some((row) => row.id === id))
+    ) {
       throw new BadRequestException('排序数据不完整，请刷新后重试');
     }
     await Promise.all(
@@ -130,7 +121,12 @@ export class SlotsService implements OnModuleInit {
     }
   }
 
-  private toPublic(slot: TimeSlot, booked: number, closed: boolean, date: string) {
+  private toPublic(
+    slot: TimeSlot,
+    booked: number,
+    closed: boolean,
+    date: string,
+  ) {
     const past = !closed && isSlotPast(date, slot.startTime);
     const avail = closed || past ? 0 : Math.max(0, slot.maxCapacity - booked);
     return {

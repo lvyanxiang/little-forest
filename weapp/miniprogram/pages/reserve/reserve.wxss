@@ -303,6 +303,8 @@
 }
 
 .btn {
+  margin: 0;
+  padding: 0;
   width: 100%;
   height: 96rpx;
   border-radius: 32rpx;
@@ -313,6 +315,8 @@
   box-sizing: border-box;
   flex-shrink: 0;
 }
+
+button::after { border: none; }
 
 .btn:active {
   opacity: 0.88;
@@ -536,6 +540,22 @@
   line-height: 1.4;
 }
 
+.policy-link { color: #242522; text-decoration: underline; }
+
+.wechat-phone { margin: 16rpx 0 0; padding: 0 24rpx; font-size: 24rpx; line-height: 68rpx; text-align: center; border-radius: 16rpx; background: #F7F7F5; color: #242522; }
+.wechat-phone::after, .phone-button::after { border: none; }
+.phone-error { display: block; margin-top: 16rpx; color: #B87C4C; font-size: 24rpx; line-height: 1.5; }
+.phone-mask { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 310; padding: 48rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: rgba(20, 20, 20, .4); }
+.privacy-mask { z-index: 320; }
+.phone-dialog { width: 100%; padding: 40rpx; box-sizing: border-box; border-radius: 40rpx; background: #FFFFFF; }
+.phone-title { display: block; text-align: center; margin-bottom: 24rpx; font-size: 36rpx; font-weight: 600; color: #242522; }
+.phone-description { display: block; margin-bottom: 32rpx; font-size: 26rpx; line-height: 1.7; color: #70726D; }
+.phone-policy { padding: 0 0 32rpx; font-size: 26rpx; text-align: center; text-decoration: underline; color: #242522; }
+.phone-actions { display: flex; gap: 20rpx; }
+.phone-button { flex: 1; margin: 0; padding: 0 8rpx; font-size: 24rpx; line-height: 80rpx; border-radius: 20rpx; }
+.phone-button.ghost { background: #F7F7F5; color: #242522; }
+.phone-button.solid { background: #242522; color: #F7F7F5; }
+
 .notice-check.on .check-label {
   color: #242522;
 }
@@ -671,3 +691,6 @@
 .success-btn {
   align-self: stretch;
 }
+
+.load-state { padding: 100rpx 48rpx; text-align: center; font-size: 28rpx; color: #70726D; }
+.load-state button { margin-top: 24rpx; font-size: 26rpx; }

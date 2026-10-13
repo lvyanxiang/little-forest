@@ -33,7 +33,9 @@ export function request<T>(path: string, method: Method = 'GET', data?: Record<s
         if (res.statusCode === 401 && authenticated && session?.token === getSession()?.token) clearSession()
         reject(new Error(readMessage(res.data)))
       },
-      fail() {
+      fail(error) {
+        // Keep the native transport error for device debugging; never log session headers or request data.
+        console.error('[API] request failed', { url: `${API_BASE}${path}`, method, errMsg: error.errMsg })
         reject(new Error('暂时连不上服务，请稍后重试'))
       },
     })

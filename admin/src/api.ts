@@ -1,5 +1,11 @@
 export type StorePayload = {
   id: number
+  name: string
+  quickDateDays: number
+  bookingAdvanceDays: number
+  uiText: Record<string, string>
+  uiTextLabels: Record<string, string>
+  brandLogoUrl: string
   address: string
   closedWeekdays: number[]
   noticeHeading: string
@@ -98,6 +104,11 @@ export const api = {
     const body = new FormData()
     body.append('image', file)
     return request<StorePayload>('/api/admin/store/home-image', { method: 'POST', body })
+  },
+  uploadBrandImage: async (file: File) => {
+    const body = new FormData()
+    body.append('image', file)
+    return request<StorePayload>('/api/admin/store/brand-image', { method: 'POST', body })
   },
   listSlots: () => request<SlotPayload[]>('/api/admin/slots'),
   createSlot: (body: Partial<SlotPayload>) =>

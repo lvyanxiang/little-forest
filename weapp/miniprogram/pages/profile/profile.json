@@ -1,6 +1,7 @@
 {
   "usingComponents": {
-    "app-header": "/components/app-header/index"
+    "app-header": "/components/app-header/index",
+    "login-consent": "/components/login-consent/index"
   },
   "backgroundColor": "#FFFFFF"
 }
